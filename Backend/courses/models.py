@@ -32,7 +32,11 @@ class Stage(models.Model):
 
 class Lesson(models.Model):
     title = models.CharField(max_length=100)
+    order = models.PositiveIntegerField(validators=[MaxValueValidator(100)])
     stage = models.ForeignKey(Stage, on_delete=models.CASCADE, related_name='lessons')
+
+    class Meta:
+        ordering = ['order']
 
     def __str__(self):
         return self.title

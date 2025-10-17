@@ -1,26 +1,32 @@
 from rest_framework import generics
 from courses.models import Course
 from courses.serializers import CourseDetailSerializer, CoursesSerializer, CourseCreateSerializer
+from courses.permissions import IsTeacher
 
 
-class CreateCourse(generics.CreateAPIView):
+class CourseCreateView(generics.CreateAPIView):
     serializer_class = CourseCreateSerializer
+    permission_classes = [IsTeacher]
 
     def perform_create(self, serializer):
-        return serializer.save(author=self.request.user)
+        serializer.save(author=self.request.user)
 
 
-class GetCourseDetails(generics.ListAPIView):
+class CourseDetailView(generics.RetrieveAPIView):
     serializer_class = CourseDetailSerializer
+    lookup_field = 'pk'
 
     def get_queryset(self):
-        course_pk = self.kwargs.get('pk')
-        return Course.objects.filter(id=course_pk).prefetch_related('images', 'stages__lessons')
+        return Course.objects.prefetch_related('images', 'stages__lessons')
 
 
-class GetCourses(generics.ListAPIView):
+class CourseListView(generics.ListAPIView):
     serializer_class = CoursesSerializer
 
     def get_queryset(self):
-        course_pk = self.kwargs.get('pk')
-        return Course.objects.prefetch_related('images', 'stages')
+        queryset = Course.objects.prefetch_related('images', 'stages')
+        
+        if self.request.user.role == 'teacher':
+            queryset = queryset.filter(author=self.request.user)
+        
+        return queryset

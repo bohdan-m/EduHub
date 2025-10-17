@@ -10,4 +10,5 @@ __pycache__/
 !**/migrations/__init__.py
 
 node_modules/
+media/
 dist/

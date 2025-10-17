@@ -12,6 +12,14 @@ class CourseCreateView(generics.CreateAPIView):
         serializer.save(author=self.request.user)
 
 
+class CourseDeleteView(generics.DestroyAPIView):
+    permission_classes = [IsTeacher]
+    lookup_field = 'pk'
+
+    def get_queryset(self):
+        return Course.objects.filter(author=self.request.user)
+
+
 class CourseDetailView(generics.RetrieveAPIView):
     serializer_class = CourseDetailSerializer
     lookup_field = 'pk'

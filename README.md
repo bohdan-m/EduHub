@@ -49,7 +49,7 @@ It is built with **Django** for the backend and **React + TypeScript** (planned)
 
 ---
 
-## 🚀 Quick Start with Docker
+## Quick Start with Docker
 
 To launch the entire project, simply run:
 
@@ -69,7 +69,7 @@ That’s it — this command will automatically:
 
 ---
 
-## 🧩 About `populate_db`
+## About `populate_db`
 
 The `populate_db` command runs automatically **during the first container build**.
 It fills the database with essential demo data, including:
@@ -84,7 +84,7 @@ This script **will not run again** automatically, because it includes an interna
 
 ---
 
-## ⚙️ Disabling Initial Population
+## Disabling Initial Population
 
 If you don’t want the database to be pre-filled during the first build,
 you can disable it by **removing line 7** from the `docker-compose.yml` file —

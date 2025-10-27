@@ -32,6 +32,7 @@ class Stage(models.Model):
 
 class Lesson(models.Model):
     title = models.CharField(max_length=100)
+    url = models.URLField(blank=True)
     order = models.PositiveIntegerField(validators=[MaxValueValidator(100)])
     stage = models.ForeignKey(Stage, on_delete=models.CASCADE, related_name='lessons')
 

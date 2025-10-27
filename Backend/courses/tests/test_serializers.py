@@ -16,7 +16,7 @@ from users.models import User
 class SerializerTestCase(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="Alex",
+            username="teacher",
             email="email@email.com",
             role="teacher",
             password="1234"

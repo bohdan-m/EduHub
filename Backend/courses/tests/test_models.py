@@ -8,7 +8,7 @@ from users.models import User
 class CourseModelTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="Alex",
+            username="student",
             email="email@email.com",
             role="student",
             password="1234"

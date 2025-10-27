@@ -6,7 +6,8 @@ EduHub is a full-stack educational platform designed to demonstrate comprehensiv
 
 ## About the Project
 
-The main goal of EduHub is to create a platform where **teachers** can create and manage courses, and **students** can browse and complete lessons. It is built with Django for the backend and planned React + TypeScript for the frontend, emphasizing clean architecture, RESTful API design, and role-based access control.
+The main goal of EduHub is to create a platform where **teachers** can create and manage courses, and **students** can browse and complete lessons.
+It is built with **Django** for the backend and **React + TypeScript** (planned) for the frontend, emphasizing clean architecture, RESTful API design, and role-based access control.
 
 ---
 
@@ -21,7 +22,7 @@ The main goal of EduHub is to create a platform where **teachers** can create an
 
   * Teachers can create courses with title, description, and preview images
   * Courses consist of multiple stages, and stages consist of lessons
-  * Lessons include title, duration, and embedded video links
+  * Lessons include title and embedded video links
 
 * **Browsing & Learning**
 
@@ -48,5 +49,47 @@ The main goal of EduHub is to create a platform where **teachers** can create an
 
 ---
 
-EduHub is designed to be a comprehensive portfolio project that demonstrates the ability to build a fully functional full-stack application with proper backend architecture, API design, and frontend integration.
+## 🚀 Quick Start with Docker
 
+To launch the entire project, simply run:
+
+```bash
+docker-compose up -d
+```
+
+That’s it — this command will automatically:
+
+1. Build the Docker images (if not yet built)
+2. Run all necessary default setup commands
+3. Initialize the database with default data via:
+
+   ```bash
+   python manage.py populate_db
+   ```
+
+---
+
+## 🧩 About `populate_db`
+
+The `populate_db` command runs automatically **during the first container build**.
+It fills the database with essential demo data, including:
+
+* Two users:
+
+  * **student** → password: `1234`
+  * **teacher** → password: `1234`
+* Two demo courses with related stages and lessons
+
+This script **will not run again** automatically, because it includes an internal check to ensure it only executes once.
+
+---
+
+## ⚙️ Disabling Initial Population
+
+If you don’t want the database to be pre-filled during the first build,
+you can disable it by **removing line 7** from the `docker-compose.yml` file —
+that’s the line responsible for calling the population script.
+
+---
+
+EduHub is designed to be a comprehensive portfolio project that demonstrates the ability to build a fully functional full-stack application with clean backend architecture, RESTful API design, and frontend integration.

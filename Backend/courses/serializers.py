@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from courses.models import Course, CourseImage, Stage, Lesson
 from users.serializers import UserSerializer
+from django.db import transaction
 
 
 class CourseImageSerializer(serializers.ModelSerializer):
@@ -29,49 +30,73 @@ class StageShortSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'order']
 
 
-class CoursesSerializer(serializers.ModelSerializer):
+class BaseCourseSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
+    images = CourseImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'description', 'author', 'images']
+
+
+class CoursesSerializer(BaseCourseSerializer):
     stages = StageShortSerializer(many=True, read_only=True)
-    images = CourseImageSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = Course
-        fields = ['id', 'title', 'description', 'author', 'stages', 'images']
+    class Meta(BaseCourseSerializer.Meta):
+        fields = BaseCourseSerializer.Meta.fields + ['stages']
 
 
-class CourseDetailSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+class CourseDetailSerializer(BaseCourseSerializer):
     stages = StageSerializer(many=True, read_only=True)
-    images = CourseImageSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = Course
-        fields = ['id', 'title', 'description', 'author', 'stages', 'images']
-    
+    class Meta(BaseCourseSerializer.Meta):
+        fields = BaseCourseSerializer.Meta.fields + ['stages']
 
-class CourseCreateSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+
+class CourseCreateSerializer(BaseCourseSerializer):
     stages = StageSerializer(many=True)
-    images = CourseImageSerializer(many=True, read_only=True)
     uploaded_images = serializers.ListField(
         child=serializers.ImageField(),
         write_only=True,
         required=False
     )
 
-    class Meta:
-        model = Course
-        fields = ['id', 'title', 'description', 'author', 'stages', 'images', 'uploaded_images']
+    class Meta(BaseCourseSerializer.Meta):
+        fields = BaseCourseSerializer.Meta.fields + ['stages', 'uploaded_images']
 
+    def validate_stages(self, value):
+        stage_orders = [stage['order'] for stage in value]
+        if len(stage_orders) != len(set(stage_orders)):
+            raise serializers.ValidationError("Stage orders must be unique")
+        
+        for stage in value:
+            lesson_orders = [lesson['order'] for lesson in stage.get('lessons', [])]
+            if len(lesson_orders) != len(set(lesson_orders)):
+                raise serializers.ValidationError("Lesson orders must be unique within each stage")
+        
+        return value
+
+    @transaction.atomic
     def create(self, validated_data):
         stages_data = validated_data.pop('stages', [])
-        images = validated_data.pop('uploaded_images', [])
+        uploaded_images = validated_data.pop('uploaded_images', [])
+        
         course = Course.objects.create(**validated_data)
-        for image in images:
-            CourseImage.objects.create(course=course, image=image)
+        
+        course_images = [
+            CourseImage(course=course, image=image) 
+            for image in uploaded_images
+        ]
+        CourseImage.objects.bulk_create(course_images)
+        
         for stage_data in stages_data:
-            lessons = stage_data.pop('lessons', [])
+            lessons_data = stage_data.pop('lessons', [])
             stage = Stage.objects.create(course=course, **stage_data)
-            for lesson in lessons:
-                Lesson.objects.create(stage=stage, **lesson)
+            
+            stage_lessons = [
+                Lesson(stage=stage, **lesson_data) 
+                for lesson_data in lessons_data
+            ]
+            Lesson.objects.bulk_create(stage_lessons)
+        
         return course

@@ -51,8 +51,13 @@ services:
     build:
       context: ./Frontend
       dockerfile: Dockerfile.frontend
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
     ports:
-      - "3000:3000"
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
     depends_on:
       - web
     networks:

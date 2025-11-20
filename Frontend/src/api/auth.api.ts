@@ -12,9 +12,21 @@ export interface LoginResponse {
   refresh: string;
 }
 
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  role: "student" | "teacher";
+  email: string;
+}
+
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const { data } = await apiClient.post<LoginResponse>('/login/', credentials);
+    return data;
+  },
+
+  register: async (credentials: RegisterRequest): Promise<User> => {
+    const { data } = await apiClient.post<User>('/register/', credentials);
     return data;
   },
 };

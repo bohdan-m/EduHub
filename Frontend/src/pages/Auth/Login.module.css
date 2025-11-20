@@ -15,11 +15,54 @@
   align-items: center;
 }
 
-
 .tagline {
   color: #6e6e6e;
   font-size: 0.938rem;
   margin: 0;
+}
+.select {
+  width: 100%;
+  height: 50px;
+  font-size: 1rem;
+  padding: 0 0.25rem;
+  border: none;
+  border-bottom: 1px solid #e7e7e7;
+  background-color: transparent;
+  color: #0e0e0e;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  outline: none;
+  appearance: none; 
+  position: relative;
+}
+
+.selectWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.selectWrapper::after {
+  content: "▾";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  color: #6e6e6e;
+  pointer-events: none;
+}
+
+.select:hover {
+  border-bottom-color: #0e0e0e;
+}
+
+.select:focus {
+  border-bottom-color: #0e0e0e;
+}
+
+.select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .createAccount {

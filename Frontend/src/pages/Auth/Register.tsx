@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useUserStore } from "../../store/store";
 import { authApi } from "../../api/auth.api";
 import styles from "./Login.module.css";
+import { useNavigate } from "react-router";
 
 function Register() {
   const [username, setUsername] = useState("");
@@ -10,6 +11,7 @@ function Register() {
   const [role, setRole] = useState<"student" | "teacher">("student");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   
   const { setUser } = useUserStore();
 
@@ -46,7 +48,7 @@ function Register() {
         <div className={styles.tagline}>
           EduHub - The Best Platform for Online Learning
         </div>
-        <button className={styles.createAccountButton} type="button">
+        <button className={styles.createAccountButton} onClick={() => {navigate("/login")}} type="button">
           Already have an account
         </button>
       </header>

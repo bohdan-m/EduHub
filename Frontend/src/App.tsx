@@ -1,16 +1,27 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import './App.css'
 import Register from './pages/Auth/Register'
+import Login from './pages/Auth/Login'
+import Dashboard from './pages/Dashboard/Dashboard'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('access')
+    setIsAuthenticated(!!token)
+  }, [])
 
   return (
-    <>
-      <Register/>
-    </>
+    <BrowserRouter>
+      <Routes>
+          <Route path="login" element={<Login/>}/>
+          <Route path="register" element={<Register/>}/>
+          <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}/>
+          <Route path="dashboard" element={<Dashboard/>}/>
+      </Routes>
+    </BrowserRouter>
   )
 }
 

@@ -6,6 +6,10 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RefreshRequest {
+  refresh: string;
+}
+
 export interface LoginResponse {
   user: User; 
   access: string;
@@ -22,6 +26,11 @@ export interface RegisterRequest {
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const { data } = await apiClient.post<LoginResponse>('/login/', credentials);
+    return data;
+  },
+
+  refresh: async (credentials: RefreshRequest): Promise<LoginResponse> => {
+    const { data } = await apiClient.post<LoginResponse>('/refresh/', credentials);
     return data;
   },
 

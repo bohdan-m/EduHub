@@ -25,6 +25,7 @@ function Login() {
       localStorage.setItem('refresh', response.refresh);
       
       setUser(response.user);
+      navigate("/dashboard")
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 
                           err.message || 

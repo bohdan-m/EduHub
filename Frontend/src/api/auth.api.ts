@@ -23,6 +23,33 @@ export interface RegisterRequest {
   email: string;
 }
 
+export interface CourseImage {
+  id: number
+  image: string 
+}
+
+export interface StageShort {
+  id: number
+  title: string
+  order: number
+}
+
+export interface CourseListItem {
+  id: number
+  title: string
+  description: string
+  author: User
+  images: CourseImage[]
+  stages: StageShort[]
+}
+
+export interface CourseListResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: CourseListItem[];
+}
+
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const { data } = await apiClient.post<LoginResponse>('/login/', credentials);
@@ -37,5 +64,12 @@ export const authApi = {
   register: async (credentials: RegisterRequest): Promise<User> => {
     const { data } = await apiClient.post<User>('/register/', credentials);
     return data;
+  },
+};
+
+export const coursesApi = {
+  courses: async (): Promise<CourseListItem[]> => {
+    const { data } = await apiClient.get<CourseListResponse>('/courses/');
+    return data.results;
   },
 };

@@ -1,5 +1,7 @@
+import CoursesList from "../Courses/CoursesList";
+
 function Dashboard () {
-    return (null);
+    return (<CoursesList/>);
 };
 
 export default Dashboard

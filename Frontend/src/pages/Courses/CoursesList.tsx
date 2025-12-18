@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { coursesApi, type CourseListItem } from "../../api/auth.api";
+import { coursesApi } from "../../api/auth.api";
+import type { CourseListItem } from "../../utils/types/courses";
 
 function CoursesList () {
     const [isLoading, setIsLoading] = useState(true)
@@ -26,7 +27,16 @@ function CoursesList () {
             {courses.length > 0 ? (
             <ul>
                 {courses.map(course => (
-                <li key={course.id}>{course.title}</li>
+                <li key={course.id}>
+                    {course.title}
+                    {course.description}
+                    {course.author}
+                    <ul>
+                        {course.images.map(image => (
+                            <li key={image.id}>{image.image}</li>
+                        ))}
+                    </ul>
+                </li>
                 ))}
             </ul>
             ) : (

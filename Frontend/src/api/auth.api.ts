@@ -1,54 +1,6 @@
-import type { User } from '../utils/types/user';
+import type { CourseListItem, CourseListResponse } from '../utils/types/courses';
+import type { LoginRequest, LoginResponse, RefreshRequest, RegisterRequest, User } from '../utils/types/user';
 import { apiClient } from './axios.config';
-
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-export interface RefreshRequest {
-  refresh: string;
-}
-
-export interface LoginResponse {
-  user: User; 
-  access: string;
-  refresh: string;
-}
-
-export interface RegisterRequest {
-  username: string;
-  password: string;
-  role: "student" | "teacher";
-  email: string;
-}
-
-export interface CourseImage {
-  id: number
-  image: string 
-}
-
-export interface StageShort {
-  id: number
-  title: string
-  order: number
-}
-
-export interface CourseListItem {
-  id: number
-  title: string
-  description: string
-  author: User
-  images: CourseImage[]
-  stages: StageShort[]
-}
-
-export interface CourseListResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: CourseListItem[];
-}
 
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {

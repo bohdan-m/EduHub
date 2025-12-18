@@ -4,12 +4,14 @@ import './App.css'
 import Register from './pages/Auth/Register'
 import Login from './pages/Auth/Login'
 import Dashboard from './pages/Dashboard/Dashboard'
+import { useUserStore } from './store/store'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const {user} = useUserStore()
 
   useEffect(() => {
-    const token = localStorage.getItem('access')
+    const token = user?.access
     setIsAuthenticated(!!token)
   }, [])
 

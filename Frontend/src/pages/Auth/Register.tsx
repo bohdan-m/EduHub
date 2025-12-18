@@ -25,11 +25,7 @@ function Register() {
       
       if (responseRegister) {
         const responseLogin = await authApi.login({ username, password });
-        
-        localStorage.setItem('access', responseLogin.access);
-        localStorage.setItem('refresh', responseLogin.refresh);
-
-        setUser(responseLogin.user);
+        setUser(responseLogin);
       };
     } catch (err: any) {
       const errorMessage = err.responseLogin?.data?.message || 

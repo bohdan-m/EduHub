@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { authApi } from './auth.api';
+import { useUserStore } from '../store/store';
+
+const { user, setUser, logout } = useUserStore();
 
 export const apiClient = axios.create({
   baseURL: 'http://localhost:8000/api',
@@ -9,7 +12,7 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access');
+  const token = user?.access;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -43,7 +46,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const refreshToken = localStorage.getItem('refresh');
+    const refreshToken = user?.refresh;
 
     if (error.response.status === 401 && refreshToken) {
       if (originalRequest._retry) {
@@ -68,7 +71,11 @@ apiClient.interceptors.response.use(
         const data = await authApi.refresh({ refresh: refreshToken });
 
         if (data.access) {
-          localStorage.setItem('access', data.access);
+
+          setUser({
+            ...user!,
+            access: data.access
+          });
 
           processQueue(null, data.access);
 
@@ -76,11 +83,13 @@ apiClient.interceptors.response.use(
           return apiClient.request(originalRequest);
         } else {
           localStorage.clear();
+          logout()
           processQueue(error, null);
           return Promise.reject(error);
         }
       } catch (err) {
         localStorage.clear();
+        logout()
         processQueue(err, null);
         return Promise.reject(err);
       } finally {

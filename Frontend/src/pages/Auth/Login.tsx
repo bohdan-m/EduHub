@@ -19,12 +19,8 @@ function Login() {
     setIsLoading(true);
 
     try {
-      const response = await authApi.login({ username, password });
-      
-      localStorage.setItem('access', response.access);
-      localStorage.setItem('refresh', response.refresh);
-      
-      setUser(response.user);
+      const response = await authApi.login({ username, password });      
+      setUser(response);
       navigate("/dashboard")
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 

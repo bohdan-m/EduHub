@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { User } from "../utils/types/user";
 
 interface UserState {
     user: User | null;

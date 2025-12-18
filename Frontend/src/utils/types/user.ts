@@ -2,6 +2,8 @@ export interface User {
     username: string;
     email: string;
     role: 'student' | 'teacher';
+    access: string;
+    refresh: string;
 }
 
 export interface LoginRequest {
@@ -10,12 +12,6 @@ export interface LoginRequest {
 }
 
 export interface RefreshRequest {
-    refresh: string;
-}
-
-export interface LoginResponse {
-    user: User; 
-    access: string;
     refresh: string;
 }
 

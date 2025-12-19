@@ -30,11 +30,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         user = self.user  
 
         data.update({
-            "user": {
-                "username": user.username,
-                "email": user.email,
-                "role": getattr(user, "role", None),
-            }
+            "username": user.username,
+            "email": user.email,
+            "role": getattr(user, "role", None),
         })
 
         return data

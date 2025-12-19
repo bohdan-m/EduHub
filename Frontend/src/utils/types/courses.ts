@@ -1,3 +1,10 @@
+export interface AuthorItem {
+    id: number
+    username: string
+    email: string
+    role: string
+};
+
 export interface CourseImage {
     id: number
     image: string 
@@ -13,7 +20,7 @@ export interface CourseListItem {
     id: number
     title: string
     description: string
-    author: string
+    author: AuthorItem
     images: CourseImage[]
     stages: StageShort[]
 }

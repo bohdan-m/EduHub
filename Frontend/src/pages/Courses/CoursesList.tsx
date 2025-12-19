@@ -1,16 +1,26 @@
 import { useEffect, useState } from "react";
 import { coursesApi } from "../../api/auth.api";
 import type { CourseListItem } from "../../utils/types/courses";
+import CoursesListItem from "../../components/CoursesListItem";
+import { useUserStore } from "../../store/store";
 
 function CoursesList () {
     const [isLoading, setIsLoading] = useState(true)
+    const [isFetchingMore, setIsFetchingMore] = useState(false)
+
     const [courses, setCourses] = useState<CourseListItem[]>([])
+    const [next, setNext] = useState<string | null>(null)
+    const [count, setCount] = useState(0)
+    const {user} = useUserStore()
+    console.log(user)
 
     useEffect(() => {
         const fetchCourses = async() => {
             try {
                 const data = await coursesApi.courses()
-                setCourses(data)
+                setCount(data.count)
+                setNext(data.next)
+                setCourses(data.results)
             } catch (error) {
                 console.error(error)
             } finally {
@@ -28,14 +38,7 @@ function CoursesList () {
             <ul>
                 {courses.map(course => (
                 <li key={course.id}>
-                    {course.title}
-                    {course.description}
-                    {course.author}
-                    <ul>
-                        {course.images.map(image => (
-                            <li key={image.id}>{image.image}</li>
-                        ))}
-                    </ul>
+                    <CoursesListItem course={course}/>
                 </li>
                 ))}
             </ul>

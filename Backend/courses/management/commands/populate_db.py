@@ -44,9 +44,9 @@ def get_course_data():
             "title": "Programming from Zero to Hero",
             "description": "Learn the fundamentals of programming step by step...",
             "images": [
-                'media/programming1.png',
-                'media/programming2.png',
-                'media/programming3.png',
+                'programming1.jpg',
+                'programming2.jpg',
+                'programming3.jpg',
             ],
             "stages": [
                 {
@@ -110,9 +110,9 @@ def get_course_data():
             "title": "Marketing Mastery",
             "description": "Learn marketing strategies from basics to advanced digital campaigns.",
             "images": [
-                'media/marketing1.png',
-                'media/marketing2.png',
-                'media/marketing3.png',
+                'marketing1.jpg',
+                'marketing2.jpg',
+                'marketing3.jpg',
             ],
             "stages": [
                 {

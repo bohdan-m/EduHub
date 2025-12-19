@@ -2,24 +2,23 @@ import axios from 'axios';
 import { authApi } from './auth.api';
 import { useUserStore } from '../store/store';
 
-const { user, setUser, logout } = useUserStore();
-
 export const apiClient = axios.create({
   baseURL: 'http://localhost:8000/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
 apiClient.interceptors.request.use((config) => {
+  const { user } = useUserStore.getState();     
   const token = user?.access;
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
-let isRefreshing = false; 
+let isRefreshing = false;
 let failedQueue: {
   resolve: (value?: any) => void;
   reject: (error: any) => void;
@@ -27,11 +26,7 @@ let failedQueue: {
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
+    error ? prom.reject(error) : prom.resolve(token);
   });
   failedQueue = [];
 };
@@ -42,16 +37,13 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (!error.response) {
-      return Promise.reject(error);
-    }
+    if (!error.response) return Promise.reject(error);
 
+    const { user, logout } = useUserStore.getState();  
     const refreshToken = user?.refresh;
 
     if (error.response.status === 401 && refreshToken) {
-      if (originalRequest._retry) {
-        return Promise.reject(error);
-      }
+      if (originalRequest._retry) return Promise.reject(error);
 
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -71,11 +63,9 @@ apiClient.interceptors.response.use(
         const data = await authApi.refresh({ refresh: refreshToken });
 
         if (data.access) {
-
-          setUser({
-            ...user!,
-            access: data.access
-          });
+          useUserStore.setState((state) => ({
+            user: { ...state.user!, access: data.access },
+          }));
 
           processQueue(null, data.access);
 
@@ -83,13 +73,13 @@ apiClient.interceptors.response.use(
           return apiClient.request(originalRequest);
         } else {
           localStorage.clear();
-          logout()
+          logout();
           processQueue(error, null);
           return Promise.reject(error);
         }
       } catch (err) {
         localStorage.clear();
-        logout()
+        logout();
         processQueue(err, null);
         return Promise.reject(err);
       } finally {

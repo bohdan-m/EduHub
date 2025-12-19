@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useUserStore } from "../../store/store";
 import { authApi } from "../../api/auth.api";
 import styles from "./Login.module.css";
@@ -13,7 +13,13 @@ function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   
-  const { setUser } = useUserStore();
+  const { user, setUser } = useUserStore();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard")
+    }
+  }, [user, navigate])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,9 +34,7 @@ function Register() {
         setUser(responseLogin);
       };
     } catch (err: any) {
-      const errorMessage = err.responseLogin?.data?.message || 
-                          err.responseRegister?.data?.message || 
-                          err.message || 
+      const errorMessage = err.response?.data.detail ||
                           "Error! Check your data";
       setError(errorMessage);
     } finally {

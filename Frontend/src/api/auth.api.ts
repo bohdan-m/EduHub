@@ -9,7 +9,7 @@ export const authApi = {
   },
 
   refresh: async (credentials: RefreshRequest): Promise<User> => {
-    const { data } = await apiClient.post<User>('/refresh/', credentials);
+    const { data } = await apiClient.post<User>('/token/refresh/', credentials);
     return data;
   },
 
@@ -20,8 +20,8 @@ export const authApi = {
 };
 
 export const coursesApi = {
-  courses: async (): Promise<CourseListItem[]> => {
+  courses: async (): Promise<CourseListResponse> => {
     const { data } = await apiClient.get<CourseListResponse>('/courses/');
-    return data.results;
+    return data;
   },
 };

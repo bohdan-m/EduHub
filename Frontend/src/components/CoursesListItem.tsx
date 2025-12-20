@@ -7,13 +7,13 @@ interface CoursesListItemProps {
 function CoursesListItem({ course }: CoursesListItemProps) {
     return (
         <div>
-            {course.title}
-            {course.description}
-            {course.author.username}
+            <p>{course.title}</p>
+            <p>{course.description}</p>
+            <p>{course.author.username}</p>
             <ul>
                 {course.images.map(image => (
                     <li key={image.id}>
-                        <img alt={image.image}src={`${image.image}`} />
+                        <img alt={image.image} src={`${image.image}`} />
                     </li>
                 ))}
             </ul>

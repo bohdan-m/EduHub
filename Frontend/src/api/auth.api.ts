@@ -20,8 +20,8 @@ export const authApi = {
 };
 
 export const coursesApi = {
-  courses: async (): Promise<CourseListResponse> => {
-    const { data } = await apiClient.get<CourseListResponse>('/courses/');
+  courses: async (url: string): Promise<CourseListResponse> => {
+    const { data } = await apiClient.get<CourseListResponse>(url);
     return data;
   },
 };

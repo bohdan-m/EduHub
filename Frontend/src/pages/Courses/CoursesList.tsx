@@ -3,6 +3,7 @@ import { coursesApi } from "../../api/auth.api";
 import type { CourseListItem } from "../../utils/types/courses";
 import CoursesListItem from "../../components/CoursesListItem";
 import { useUserStore } from "../../store/store";
+import { useInView } from "react-intersection-observer";
 
 function CoursesList () {
     const [isLoading, setIsLoading] = useState(true)
@@ -12,23 +13,44 @@ function CoursesList () {
     const [next, setNext] = useState<string | null>(null)
     const [count, setCount] = useState(0)
     const {user} = useUserStore()
-    console.log(user)
+
+    const {ref, inView} = useInView({
+        threshold: 0,
+        rootMargin: '100px',
+    });
 
     useEffect(() => {
-        const fetchCourses = async() => {
-            try {
-                const data = await coursesApi.courses()
-                setCount(data.count)
-                setNext(data.next)
-                setCourses(data.results)
-            } catch (error) {
-                console.error(error)
-            } finally {
-                setIsLoading(false)
-            }
-        }
         fetchCourses()
     }, [])
+
+    useEffect(() => {
+        if (inView && next && !isFetchingMore && !isLoading) {
+            fetchCourses(next.slice(next.indexOf('/courses/')));
+        }
+    }, [inView, next, isFetchingMore, isLoading])
+
+    const fetchCourses = async (url: string = "/courses/") => {
+        try {
+            const isInitialLoad = url === "/courses/"
+            
+            if (isInitialLoad) {
+                setIsLoading(true)
+            } else {
+                setIsFetchingMore(true)
+            }
+    
+            const data = await coursesApi.courses(url)
+
+            setCount(data.count)
+            setNext(data.next)
+            setCourses(prev => [...prev, ...data.results])
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setIsLoading(false)
+            setIsFetchingMore(false)
+        }
+    }
 
     if (isLoading) {return <p>Loading...</p>}
 
@@ -41,6 +63,11 @@ function CoursesList () {
                     <CoursesListItem course={course}/>
                 </li>
                 ))}
+                {next && (
+                    <li ref={ref} style={{minHeight: '20px'}}>
+                        {isFetchingMore && <p>Loading more...</p>}
+                    </li>
+                )}
             </ul>
             ) : (
             <p>No courses yet</p>

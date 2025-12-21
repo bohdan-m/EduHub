@@ -36,14 +36,18 @@ class BaseCourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'description', 'author', 'images']
+        fields = ['id', 'title', 'description', 'author', 'images', 'created_at']
 
 
 class CoursesSerializer(BaseCourseSerializer):
-    stages = StageShortSerializer(many=True, read_only=True)
+    stages = serializers.SerializerMethodField()
 
     class Meta(BaseCourseSerializer.Meta):
         fields = BaseCourseSerializer.Meta.fields + ['stages']
+
+    def get_stages(self, obj):
+        stages_qs = obj.stages.all().order_by('order')[:5]
+        return StageShortSerializer(stages_qs, many=True).data
 
 
 class CourseDetailSerializer(BaseCourseSerializer):

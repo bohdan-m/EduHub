@@ -4,6 +4,7 @@ import type { CourseListItem } from "../../utils/types/courses";
 import CoursesListItem from "../../components/Courses/CoursesListItem";
 import { useUserStore } from "../../store/store";
 import { useInView } from "react-intersection-observer";
+import styles from "./Courses.module.css"
 
 function CoursesList () {
     const [isLoading, setIsLoading] = useState(true)
@@ -59,7 +60,7 @@ function CoursesList () {
             {courses.length > 0 ? (
             <ul>
                 {courses.map(course => (
-                <li key={course.id}>
+                <li className={styles.coursesList} key={course.id}>
                     <CoursesListItem course={course}/>
                 </li>
                 ))}
@@ -76,4 +77,4 @@ function CoursesList () {
     )
 };
 
-export default CoursesList
+export default CoursesList;

@@ -1,6 +1,126 @@
+.container {
+    background-color: #FFFFFF;
+    padding: 3vh 5vh;
+    margin-top: 5vh;
+    border-radius: 12px;
+}
+
+.headerContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.headerContent {
+    text-align: start;
+}
+
+.headerText1 {
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 0;
+    color: #262626;
+}
+
+.headerText2 {
+    font-size: 18px;
+    color: #59595A;
+}
+
+.button {
+    height: 6vh;
+    width: 10vw;
+    background-color: #FCFCFD;
+    border-style: solid;
+    border-color: #F1F1F3;
+    border-width: 1px;
+    border-radius: 8px;
+}
+
 .image {
-    width: 30%;
+    width: 350px;
+    height: 263px;
     aspect-ratio: 4 / 3;
     border-radius: 6px;
     object-fit: cover;
+}
+
+.courseList {
+    list-style: none;
+}
+
+.imagesContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 0;      
+    padding: 0;    
+    list-style: none;
+}
+
+.footerContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2vh;
+}
+
+.date {
+    height: 4vh;
+    width: 5vw;
+    border: 1px solid #F1F1F3;
+    border-radius: 8px;
+    color: #59595A;
+    display: flex;
+    justify-content: center; 
+    align-items: center;    
+}
+
+.author {
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 0;
+    color: #262626;
+}
+
+.stagesContainer {
+    margin-top: 4vh;
+    border: 1px solid #F1F1F3;
+    border-radius: 12px;
+    text-align: start;
+}
+
+.stageText {
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 0;
+    color: #262626;
+    padding: 1vw 2vh;
+}
+
+.stagesContent {
+    display: flex;
+    flex-direction: row;
+    padding-left: 0; 
+    margin-left: 0; 
+    list-style: none; 
+}
+
+.stage {
+    width: 100%;
+    border-top: 1px solid #F1F1F3;
+    padding-left: 2vw;
+}
+
+.stageOrder {
+    font-size: 50px;
+    line-height: 0;
+    font-weight: bold;
+}
+
+.stageTitle {
+    font-size: 16px;
+    color: #59595A;
 }

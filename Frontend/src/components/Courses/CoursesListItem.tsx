@@ -7,17 +7,39 @@ interface CoursesListItemProps {
 
 function CoursesListItem({ course }: CoursesListItemProps) {
     return (
-        <div>
-            <p>{course.title}</p>
-            <p>{course.description}</p>
-            <p>{course.author.username}</p>
-            <ul>
+        <div className={styles.container}>
+            <div className={styles.headerContainer}>
+                <div className={styles.headerContent}>
+                    <p className={styles.headerText1}>{course.title}</p>
+                    {/* <p className={styles.headerText2}>{course.description}</p> */}
+                    <p className={styles.headerText2}>Learn the fundamentals of web design, including HTML, CSS, and responsive design principles. Develop the skills to create visually appealing and user-friendly websites.</p>
+                </div>
+                <button className={styles.button}>View Course</button>
+            </div>
+            <ul className={styles.imagesContainer}>
                 {course.images.map(image => (
-                    <li key={image.id}>
+                    <li className={styles.courseList} key={image.id}>
                         <img className={styles.image} alt={image.image} src={`${image.image}`} />
                     </li>
                 ))}
             </ul>
+            <div className={styles.footerContainer}>
+                <div className={styles.date}>
+                    <p>{course.created_at.slice(0, course.created_at.indexOf('T'))}</p>
+                </div>
+                <p className={styles.author}>By {course.author.username}</p>
+            </div>
+            <div className={styles.stagesContainer}>
+                <p className={styles.stageText}>Curriculum</p>
+                <ul className={styles.stagesContent}>
+                    {course.stages.map(stage => (
+                        <div className={styles.stage}>
+                            <p className={styles.stageOrder}>0{stage.order}</p>
+                            <p className={styles.stageTitle}>{stage.title}</p>
+                        </div>
+                    ))}
+                </ul>
+            </div>
         </div>
     );
 };

@@ -1,4 +1,4 @@
-import type { CourseListItem, CourseListResponse } from '../utils/types/courses';
+import type { CourseListResponse } from '../utils/types/courses';
 import type { LoginRequest, RefreshRequest, RegisterRequest, User } from '../utils/types/user';
 import { apiClient } from './axios.config';
 

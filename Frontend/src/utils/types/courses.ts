@@ -20,6 +20,7 @@ export interface CourseListItem {
     id: number
     title: string
     description: string
+    created_at: string
     author: AuthorItem
     images: CourseImage[]
     stages: StageShort[]

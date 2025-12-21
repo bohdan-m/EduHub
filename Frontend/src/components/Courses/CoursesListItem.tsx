@@ -1,4 +1,5 @@
-import type { CourseListItem } from "../utils/types/courses";
+import type { CourseListItem } from "../../utils/types/courses";
+import styles from "./CoursesList.module.css";
 
 interface CoursesListItemProps {
     course: CourseListItem;
@@ -13,7 +14,7 @@ function CoursesListItem({ course }: CoursesListItemProps) {
             <ul>
                 {course.images.map(image => (
                     <li key={image.id}>
-                        <img alt={image.image} src={`${image.image}`} />
+                        <img className={styles.image} alt={image.image} src={`${image.image}`} />
                     </li>
                 ))}
             </ul>

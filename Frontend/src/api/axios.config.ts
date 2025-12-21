@@ -1,57 +1,73 @@
-import axios from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { authApi } from './auth.api';
 import { useUserStore } from '../store/store';
 
 export const apiClient = axios.create({
   baseURL: 'http://localhost:8000/api',
   headers: { 'Content-Type': 'application/json' },
+  timeout: 10000, 
 });
 
 apiClient.interceptors.request.use((config) => {
-  const { user } = useUserStore.getState();     
-  const token = user?.access;
+  if (config.url?.includes('/refresh/')) {
+    return config;
+  }
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const { user } = useUserStore.getState();
+  if (user?.access) {
+    config.headers.Authorization = `Bearer ${user.access}`;
   }
 
   return config;
 });
 
-let isRefreshing = false;
-let failedQueue: {
-  resolve: (value?: any) => void;
+interface QueueItem {
+  resolve: (token: string) => void;
   reject: (error: any) => void;
-}[] = [];
+}
 
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    error ? prom.reject(error) : prom.resolve(token);
+let isRefreshing = false;
+let failedQueue: QueueItem[] = [];
+
+const processQueue = (error: any = null, token: string | null = null) => {
+  failedQueue.forEach((item) => {
+    error ? item.reject(error) : item.resolve(token!);
   });
   failedQueue = [];
 };
 
 apiClient.interceptors.response.use(
   (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-  async (error) => {
-    const originalRequest = error.config;
+    if (!error.response || !originalRequest) {
+      return Promise.reject(error);
+    }
 
-    if (!error.response) return Promise.reject(error);
+    const { status } = error.response;
+    const { user, updateTokens, logout } = useUserStore.getState();
 
-    const { user, logout } = useUserStore.getState();  
-    const refreshToken = user?.refresh;
+    if (originalRequest.url?.includes('/refresh/') && status === 401) {
+      console.log('Refresh token expired, logging out...');
+      logout();
+      return Promise.reject(error);
+    }
 
-    if (error.response.status === 401 && refreshToken) {
-      if (originalRequest._retry) return Promise.reject(error);
+    if (status === 401 && user?.refresh) {
+      if (originalRequest._retry) {
+        console.log('Retry failed, logging out...');
+        logout();
+        return Promise.reject(error);
+      }
 
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
-            return apiClient.request(originalRequest);
+            return apiClient(originalRequest);
           })
           .catch((err) => Promise.reject(err));
       }
@@ -60,28 +76,21 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const data = await authApi.refresh({ refresh: refreshToken });
+        const data = await authApi.refresh({ refresh: user.refresh });
 
-        if (data.access) {
-          useUserStore.setState((state) => ({
-            user: { ...state.user!, access: data.access },
-          }));
+        updateTokens(data.access, data.refresh);
+        processQueue(null, data.access);
 
-          processQueue(null, data.access);
+        originalRequest.headers.Authorization = `Bearer ${data.access}`;
+        return apiClient(originalRequest);
 
-          originalRequest.headers.Authorization = `Bearer ${data.access}`;
-          return apiClient.request(originalRequest);
-        } else {
-          localStorage.clear();
-          logout();
-          processQueue(error, null);
-          return Promise.reject(error);
-        }
-      } catch (err) {
-        localStorage.clear();
+      } catch (refreshError: any) {
+        console.log('Refresh failed:', refreshError.response?.status);
+        
         logout();
-        processQueue(err, null);
-        return Promise.reject(err);
+        processQueue(refreshError, null);
+        
+        return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }

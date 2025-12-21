@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { coursesApi } from "../../api/auth.api";
 import type { CourseListItem } from "../../utils/types/courses";
-import CoursesListItem from "../../components/CoursesListItem";
+import CoursesListItem from "../../components/Courses/CoursesListItem";
 import { useUserStore } from "../../store/store";
 import { useInView } from "react-intersection-observer";
 

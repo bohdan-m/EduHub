@@ -5,15 +5,33 @@ import type { User } from "../utils/types/user";
 interface UserState {
     user: User | null;
     setUser: (user: User) => void;
+    updateTokens: (access: string, refresh?: string) => void;
     logout: () => void;
+    isAuthenticated: () => boolean;
 }
 
 export const useUserStore = create<UserState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             user: null,
+            
             setUser: (user: User) => set({ user }),
-            logout: () => set({ user: null }),
+            
+            updateTokens: (access: string, refresh?: string) => 
+                set((state) => ({
+                    user: state.user 
+                        ? { ...state.user, access, refresh: refresh ?? state.user.refresh }
+                        : null
+                })),
+            
+            logout: () => {
+                set({ user: null });
+            },
+            
+            isAuthenticated: () => {
+                const user = get().user;
+                return !!(user?.access && user?.refresh);
+            },
         }),
         {
             name: 'user-storage',

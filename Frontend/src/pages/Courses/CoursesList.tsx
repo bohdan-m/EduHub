@@ -5,6 +5,7 @@ import CoursesListItem from "../../components/Courses/CoursesListItem";
 import { useUserStore } from "../../store/store";
 import { useInView } from "react-intersection-observer";
 import styles from "./Courses.module.css"
+import HeaderPage from "../../components/Header/HeaderPage";
 
 function CoursesList () {
     const [isLoading, setIsLoading] = useState(true)
@@ -57,6 +58,7 @@ function CoursesList () {
 
     return (
         <div>
+            <HeaderPage />
             {courses.length > 0 ? (
             <ul>
                 {courses.map(course => (

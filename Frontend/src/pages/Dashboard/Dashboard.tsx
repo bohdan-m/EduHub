@@ -1,7 +1,13 @@
+import HeaderPage from "../../components/Header/HeaderPage";
 import CoursesList from "../Courses/CoursesList";
 
 function Dashboard () {
-    return (<CoursesList/>);
+    return (
+        <>
+            <HeaderPage />
+            <CoursesList/>
+        </>
+);
 };
 
 export default Dashboard

@@ -1,0 +1,33 @@
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; 
+    align-self: center;
+    gap: 32px;
+    margin-top: 6vh;
+    margin-bottom: 6vh;
+}
+
+.header, .description {
+    text-align: left;
+    width: 50%;
+    justify-content: center;
+}
+
+.header {
+    font-size: 36px;
+}
+
+.description {
+    font-size: 16px;
+}
+
+.line {
+    width: 90vw;
+    height: 1px;
+    display: flex;
+    align-self: center;
+    justify-self: center;
+    background-color: #F1F1F3;
+    margin-top: 32px;
+}

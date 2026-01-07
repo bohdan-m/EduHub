@@ -1,19 +1,24 @@
 .header {
     display: flex;
     align-items: center;
+    justify-self: center;
     justify-content: space-between;
-    padding: 16px 32px;
+    width: 80vw;
 }
 
 .nav {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 32px;
+}
+
+.buttonsContainer {
+    gap: 6px;
 }
 
 .logoContainer {
-    width: 54px;
-    height: 54px;
+    width: 50px;
+    height: 50px;
     background-color: #ff9500;
     display: flex;
     align-items: center;
@@ -22,8 +27,8 @@
 }
 
 .logo {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
 }
 
 .auth {

@@ -6,6 +6,7 @@ import { useUserStore } from "../../store/store";
 import { useInView } from "react-intersection-observer";
 import styles from "./Courses.module.css"
 import HeaderPage from "../../components/Header/HeaderPage";
+import DescriptionPage from "../../components/Header/DescriptionPage";
 
 function CoursesList () {
     const [isLoading, setIsLoading] = useState(true)
@@ -58,7 +59,7 @@ function CoursesList () {
 
     return (
         <div>
-            <HeaderPage />
+            <DescriptionPage header="Online Courses from Qualified Teachers" description="Welcome to our online courses page, where you can improve your skills in any field. Choose one of our courses, designed to provide you with comprehensive knowledge and practical experience from qualified instructors. Explore the courses below and find the one that is perfect for your learning needs." />
             {courses.length > 0 ? (
             <ul>
                 {courses.map(course => (

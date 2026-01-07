@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.permissions import AllowAny
 from courses.models import Course
 from courses.serializers import CourseDetailSerializer, CoursesSerializer, CourseCreateSerializer
 from courses.permissions import IsTeacher
@@ -30,11 +31,12 @@ class CourseDetailView(generics.RetrieveAPIView):
 
 class CourseListView(generics.ListAPIView):
     serializer_class = CoursesSerializer
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = Course.objects.prefetch_related('images', 'stages')
         
-        if self.request.user.role == 'teacher':
+        if self.request.user.is_authenticated and self.request.user.role == 'teacher':
             queryset = queryset.filter(author=self.request.user)
         
         return queryset

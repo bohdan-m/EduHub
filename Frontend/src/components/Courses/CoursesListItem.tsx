@@ -11,8 +11,7 @@ function CoursesListItem({ course }: CoursesListItemProps) {
             <div className={styles.headerContainer}>
                 <div className={styles.headerContent}>
                     <p className={styles.headerText1}>{course.title}</p>
-                    {/* <p className={styles.headerText2}>{course.description}</p> */}
-                    <p className={styles.headerText2}>Learn the fundamentals of web design, including HTML, CSS, and responsive design principles. Develop the skills to create visually appealing and user-friendly websites.</p>
+                    <p className={styles.headerText2}>{course.description}</p>
                 </div>
                 <button className={styles.button}>View Course</button>
             </div>

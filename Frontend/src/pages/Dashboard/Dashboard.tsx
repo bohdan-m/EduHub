@@ -1,7 +1,7 @@
 import HeaderPage from "../../components/Header/HeaderPage";
 import CoursesList from "../Courses/CoursesList";
 
-function Dashboard () {
+function Home () {
     return (
         <>
             <HeaderPage />
@@ -10,4 +10,4 @@ function Dashboard () {
 );
 };
 
-export default Dashboard
+export default Home

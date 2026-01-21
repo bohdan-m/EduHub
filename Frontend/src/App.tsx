@@ -2,29 +2,32 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import './App.css'
 import Register from './pages/Auth/Register'
 import Login from './pages/Auth/Login'
-import Dashboard from './pages/Dashboard/Dashboard'
 import { useUserStore } from './store/store'
+import Home from './pages/Dashboard/Dashboard'
+import About from './pages/About/About'
+import Contact from './pages/Contact/Contact'
+import Pricing from './pages/Pricing/Pricing'
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = useUserStore((state) => !!state.user?.access)
-  const location = useLocation()
+// function ProtectedRoute({ children }: { children: React.ReactNode }) {
+//   const isAuthenticated = useUserStore((state) => !!state.user?.access)
+//   const location = useLocation()
   
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />
-  }
+//   if (!isAuthenticated) {
+//     return <Navigate to="/login" state={{ from: location }} replace />
+//   }
   
-  return <>{children}</>
-}
+//   return <>{children}</>
+// }
 
-function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = useUserStore((state) => !!state.user?.access)
+// function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
+//   const isAuthenticated = useUserStore((state) => !!state.user?.access)
   
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />
-  }
+//   if (isAuthenticated) {
+//     return <Navigate to="/dashboard" replace />
+//   }
   
-  return <>{children}</>
-}
+//   return <>{children}</>
+// }
 
 function App() {
   return (
@@ -33,25 +36,37 @@ function App() {
         <Route 
           path="/login" 
           element={
-            <PublicOnlyRoute>
               <Login />
-            </PublicOnlyRoute>
-          } 
+            } 
         />
         <Route 
           path="/register" 
           element={
-            <PublicOnlyRoute>
               <Register />
-            </PublicOnlyRoute>
           } 
         />
         <Route 
-          path="/dashboard" 
+          path="/home" 
           element={
-            // <ProtectedRoute>
-              <Dashboard />
-            // </ProtectedRoute>
+              <Home />
+          } 
+        />
+        <Route 
+          path="/about" 
+          element={
+              <About />
+          } 
+        />
+        <Route 
+          path="/contact" 
+          element={
+              <Contact />
+          } 
+        />
+        <Route 
+          path="/pricing" 
+          element={
+              <Pricing />
           } 
         />
         <Route 

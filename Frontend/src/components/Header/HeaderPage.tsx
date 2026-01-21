@@ -1,8 +1,10 @@
+import { useNavigate } from "react-router";
 import { useUserStore } from "../../store/store";
 import styles from "./HeaderPage.module.css";
 
 function HeaderPage() {
     const { isAuthenticated, logout } = useUserStore();
+    const navigate = useNavigate();
 
     return (
         <>
@@ -16,10 +18,10 @@ function HeaderPage() {
                         />
                     </div>
                     <div className={styles.buttonsContainer}>
-                        <button className={styles.navButton}>Home</button>
-                        <button className={styles.navButton}>About Us</button>
-                        <button className={styles.navButton}>Pricing</button>
-                        <button className={styles.navButton}>Contact</button>
+                        <button className={styles.navButton} onClick={() => navigate('/home')}>Home</button>
+                        <button className={styles.navButton} onClick={() => navigate('/about')}>About Us</button>
+                        <button className={styles.navButton} onClick={() => navigate('/pricing')}>Pricing</button>
+                        <button className={styles.navButton} onClick={() => navigate('/contact')}>Contact</button>
                     </div>
                 </nav>
 

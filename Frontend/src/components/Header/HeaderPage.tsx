@@ -17,7 +17,6 @@ function HeaderPage() {
                     </div>
                     <div className={styles.buttonsContainer}>
                         <button className={styles.navButton}>Home</button>
-                        <button className={styles.navButton}>Courses</button>
                         <button className={styles.navButton}>About Us</button>
                         <button className={styles.navButton}>Pricing</button>
                         <button className={styles.navButton}>Contact</button>

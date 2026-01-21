@@ -127,11 +127,10 @@
     padding: 0;
     margin: 0;
     list-style: none;
+    border-top: 1px solid #F1F1F3;
 }
 
 .stage {
-    width: 100%;
-    border-top: 1px solid #F1F1F3;
     padding: 20px 30px;
 }
 
@@ -234,50 +233,15 @@
     }
 
     .stage {
-        padding: 15px 20px;
+        padding: 10px 20px;
     }
 
     .stageOrder {
-        font-size: 36px;
+        display: none;
     }
 
     .stageTitle {
         font-size: 14px;
-    }
-}
-
-/* Small mobile */
-@media (max-width: 480px) {
-    .container {
-        padding: 1.5vh 1.5vh;
-    }
-
-    .headerText1 {
-        font-size: 16px;
-    }
-
-    .headerText2 {
-        font-size: 13px;
-    }
-
-    .date {
-        font-size: 14px;
-    }
-
-    .author {
-        font-size: 14px;
-    }
-
-    .stageText {
-        font-size: 18px;
-        padding: 12px 15px;
-    }
-
-    .stage {
-        padding: 12px 15px;
-    }
-
-    .stageOrder {
-        font-size: 32px;
+        margin: 5px 0;
     }
 }

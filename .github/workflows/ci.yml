@@ -326,4 +326,4 @@ jobs:
           echo "| Frontend Build | ${{ needs.frontend-build.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Docker Backend Build | ${{ needs.docker-backend-build.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Docker Frontend Build | ${{ needs.docker-frontend-build.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Docker Compose Test | ${{ needs.docker compose-test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Compose Test | ${{ needs.docker-compose-test.result }} |" >> $GITHUB_STEP_SUMMARY

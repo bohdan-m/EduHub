@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import './App.css'
 import Register from './pages/Auth/Register'
 import Login from './pages/Auth/Login'

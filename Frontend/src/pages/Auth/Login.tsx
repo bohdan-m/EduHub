@@ -3,6 +3,7 @@ import { useUserStore } from "../../store/store";
 import { authApi } from "../../api/auth.api";
 import styles from "./Login.module.css";
 import { useNavigate } from "react-router";
+import axios from "axios";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -28,9 +29,16 @@ function Login() {
       const response = await authApi.login({ username, password });
       setUser(response);
       navigate("/dashboard")
-    } catch (err: any) {
-      const errorMessage = err.response?.data.detail ||
-                          "Error! Check your data";
+    } catch (err: unknown) {
+      let errorMessage = 'Error! Check your data';
+    
+      if (axios.isAxiosError(err)) {
+        errorMessage =
+          err.response?.data?.detail ??
+          err.response?.data?.message ??
+          errorMessage;
+      }
+    
       setError(errorMessage);
     } finally {
       setIsLoading(false);

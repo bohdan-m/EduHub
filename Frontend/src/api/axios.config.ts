@@ -23,16 +23,24 @@ apiClient.interceptors.request.use((config) => {
 
 interface QueueItem {
   resolve: (token: string) => void;
-  reject: (error: any) => void;
+  reject: (error: unknown) => void;
 }
 
 let isRefreshing = false;
 let failedQueue: QueueItem[] = [];
 
-const processQueue = (error: any = null, token: string | null = null) => {
+const processQueue = (
+  error: unknown | null = null,
+  token: string | null = null
+) => {
   failedQueue.forEach((item) => {
-    error ? item.reject(error) : item.resolve(token!);
+    if (error) {
+      item.reject(error);
+    } else if (token) {
+      item.resolve(token);
+    }
   });
+
   failedQueue = [];
 };
 
@@ -84,12 +92,14 @@ apiClient.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${data.access}`;
         return apiClient(originalRequest);
 
-      } catch (refreshError: any) {
-        console.log('Refresh failed:', refreshError.response?.status);
-        
+      } catch (refreshError: unknown) {
+        const axiosError = refreshError as AxiosError;
+      
+        console.log('Refresh failed:', axiosError.response?.status);
+      
         logout();
         processQueue(refreshError, null);
-        
+      
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

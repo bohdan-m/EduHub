@@ -54,7 +54,7 @@ It is built with **Django** for the backend and **React + TypeScript** (planned)
 To launch the entire project, simply run:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 That’s it — this command will automatically:
@@ -87,7 +87,7 @@ This script **will not run again** automatically, because it includes an interna
 ## Disabling Initial Population
 
 If you don’t want the database to be pre-filled during the first build,
-you can disable it by **removing line 7** from the `docker-compose.yml` file —
+you can disable it by **removing line 7** from the `docker compose.yml` file —
 that’s the line responsible for calling the population script.
 
 ---

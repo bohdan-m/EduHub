@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import { coursesApi } from "../../api/auth.api";
 import type { CourseListItem } from "../../utils/types/courses";
 import CoursesListItem from "../../components/Courses/CoursesListItem";
-import { useUserStore } from "../../store/store";
 import { useInView } from "react-intersection-observer";
 import styles from "./Courses.module.css"
-import HeaderPage from "../../components/Header/HeaderPage";
 import DescriptionPage from "../../components/Header/DescriptionPage";
 
 function CoursesList () {
@@ -14,8 +12,6 @@ function CoursesList () {
 
     const [courses, setCourses] = useState<CourseListItem[]>([])
     const [next, setNext] = useState<string | null>(null)
-    const [count, setCount] = useState(0)
-    const {user} = useUserStore()
 
     const {ref, inView} = useInView({
         threshold: 0,
@@ -44,7 +40,6 @@ function CoursesList () {
     
             const data = await coursesApi.courses(url)
 
-            setCount(data.count)
             setNext(data.next)
             setCourses(prev => [...prev, ...data.results])
         } catch (error) {

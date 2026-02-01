@@ -173,6 +173,7 @@ jobs:
           context: ./Backend
           file: ./Backend/Dockerfile.backend
           push: false
+          load: true
           tags: eduhub-backend:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -199,6 +200,7 @@ jobs:
           context: ./Frontend
           file: ./Frontend/Dockerfile.frontend
           push: false
+          load: true
           tags: eduhub-frontend:test
           cache-from: type=gha
           cache-to: type=gha,mode=max

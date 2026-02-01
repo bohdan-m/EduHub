@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router'
 import './App.css'
 import Register from './pages/Auth/Register'
 import Login from './pages/Auth/Login'
@@ -31,13 +31,15 @@ import HeaderPage from './components/Header/HeaderPage'
 //   return <>{children}</>
 // }
 
-function App() {
+function AppLayout() {
+  const location = useLocation()
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
+
   return (
-    <BrowserRouter>
-      <div className="appLayout">
-        <HeaderPage />
-        <main className="mainContent">
-          <Routes>
+    <div className="appLayout">
+      {!isAuthPage && <HeaderPage />}
+      <main className="mainContent">
+        <Routes>
             <Route 
               path="/login" 
               element={<Login />} 
@@ -70,10 +72,17 @@ function App() {
               path="*" 
               element={<Navigate to="/" replace />} 
             />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
+        </Routes>
+      </main>
+      {!isAuthPage && <Footer />}
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppLayout />
     </BrowserRouter>
   )
 }

@@ -1,12 +1,23 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { authApi } from "../../api/auth.api";
 import { useUserStore } from "../../store/store";
 import styles from "./HeaderPage.module.css";
 
 function HeaderPage() {
-    const { isAuthenticated, logout } = useUserStore();
+    const { user, isAuthenticated, logout } = useUserStore();
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    const handleLogout = () => {
+        const refresh = user?.refresh;
+        if (refresh) {
+            authApi.logout(refresh).catch(() => {});
+        }
+        logout();
+        setIsMobileMenuOpen(false);
+        navigate("/login");
+    };
 
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -45,14 +56,14 @@ function HeaderPage() {
                 {isAuthenticated() ? (
                     <button
                         className={styles.navButton}
-                        onClick={logout}
+                        onClick={handleLogout}
                     >
                         Logout
                     </button>
                 ) : (
                     <>
-                        <button className={styles.navButton}>Sign Up</button>
-                        <button className={styles.loginButton}>Log In</button>
+                        <button className={styles.navButton} onClick={() => navigate('/register')}>Sign Up</button>
+                        <button className={styles.loginButton} onClick={() => navigate('/login')}>Log In</button>
                     </>
                 )}
             </div>
@@ -68,7 +79,7 @@ function HeaderPage() {
                         {isAuthenticated() ? (
                             <button
                                 className={styles.mobileNavButton}
-                                onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+                                onClick={handleLogout}
                             >
                                 Logout
                             </button>

@@ -62,3 +62,18 @@ class AuthTests(APITestCase):
         response = self.client.post(self.refresh_url, {'refresh': 'invalidtoken'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertNotIn('access', response.data)
+
+    def test_logout_blacklists_refresh_token(self):
+        response = self.client.post(self.token_url, {
+            'username': 'testuser',
+            'password': 'testpassword123'
+        }, format='json')
+        refresh_token = response.data['refresh']
+
+        logout_url = reverse('token_logout')
+        response = self.client.post(logout_url, {'refresh': refresh_token}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Using the same refresh token again should fail
+        response = self.client.post(self.refresh_url, {'refresh': refresh_token}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

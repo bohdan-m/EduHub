@@ -1,0 +1,224 @@
+:root {
+  --pricing-accent: #ff9500;
+  --pricing-accent-light: #ff9500;
+  --pricing-accent-bg: #fef3e9;
+  --pricing-dark: #1a1a1a;
+  --pricing-text: #1a1a1a;
+  --pricing-text-muted: #6b7280;
+  --pricing-card-bg: #ffffff;
+  --pricing-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --pricing-feature-bg: #f4f4f5;
+  --pricing-radius: 12px;
+  --pricing-radius-sm: 8px;
+}
+
+.wrapper {
+  min-height: 100%;
+  padding: clamp(1rem, 4vw, 2rem) clamp(1rem, 4vw, 2.5rem) clamp(2rem, 6vw, 3rem);
+}
+
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--pricing-card-bg);
+  border-radius: var(--pricing-radius);
+  box-shadow: var(--pricing-shadow);
+  overflow: hidden;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.toggleWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  margin-top: 3%;
+}
+
+.toggle {
+  display: inline-flex;
+  background: #fff;
+  border-radius: var(--pricing-radius-sm);
+  padding: 4px;
+  gap: 0;
+}
+
+.toggleButton {
+  padding: clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 4vw, 1.5rem);
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #000;
+  transition: color 0.2s, background 0.2s;
+  width: 125px;
+}
+
+.toggleButton:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.toggleButtonActive {
+  background: var(--pricing-accent);
+  color: #fff;
+}
+
+.toggleButtonActive:hover {
+  color: #fff;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1rem, 3vw, 1.5rem);
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: var(--pricing-card-bg);
+  border-radius: var(--pricing-radius);
+  box-shadow: var(--pricing-shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #eee;
+}
+
+.cardTitle {
+  background: var(--pricing-accent-bg);
+  color: var(--pricing-text);
+  font-size: clamp(1rem, 2.5vw, 1.125rem);
+  font-weight: 700;
+  padding: clamp(0.75rem, 2vw, 1rem) 1rem;
+  text-align: center;
+}
+
+.priceWrap {
+  padding: clamp(1rem, 3vw, 1.5rem) 1rem 0.5rem;
+}
+
+.price {
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-weight: 700;
+  color: var(--pricing-text);
+  line-height: 1.2;
+}
+
+.pricePeriod {
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+  font-weight: 400;
+  color: var(--pricing-text-muted);
+  margin-left: 2px;
+}
+
+.featuresSection {
+  padding: 0 1rem clamp(1rem, 3vw, 1.25rem);
+  flex: 1;
+}
+
+.featuresTitle {
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  font-weight: 600;
+  color: var(--pricing-text);
+  margin-bottom: clamp(0.5rem, 1.5vw, 0.75rem);
+}
+
+.featureList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.5rem, 1.5vw, 0.65rem) clamp(0.75rem, 2vw, 1rem);
+  background: var(--pricing-feature-bg);
+  border-radius: 999px;
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+  color: var(--pricing-text);
+  line-height: 1.35;
+}
+
+.icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconCheck {
+  color: var(--pricing-accent);
+}
+
+.iconCross {
+  color: var(--pricing-text-muted);
+}
+
+.ctaWrap {
+  padding: 0 1rem clamp(1.25rem, 3vw, 1.5rem);
+}
+
+.cta {
+  display: block;
+  width: 100%;
+  padding: clamp(0.75rem, 2vw, 0.9rem) 1rem;
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  font-weight: 600;
+  color: #fff;
+  background: var(--pricing-accent);
+  border: none;
+  border-radius: var(--pricing-radius-sm);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.05s;
+}
+
+.cta:hover {
+  background: #d14d03;
+}
+
+.cta:active {
+  transform: scale(0.99);
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .content {
+    padding: 1rem;
+  }
+
+  .toggle {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .toggleButton {
+    flex: 1;
+  }
+
+  .cardTitle {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .featureItem {
+    padding: 0.5rem 0.75rem;
+  }
+}

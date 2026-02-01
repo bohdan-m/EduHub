@@ -1,0 +1,160 @@
+.footer {
+  margin-top: auto;
+  padding: 2.5rem 1.5rem 1.5rem;
+}
+
+.wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ctaTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.ctaText {
+  margin: 0;
+  font-size: 0.938rem;
+  color: #b8bcc4;
+  max-width: 320px;
+}
+
+.ctaButton {
+  margin-top: 0.5rem;
+  padding: 0.6em 1.4em;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #ff9500;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.ctaButton:hover {
+  background-color: #e68600;
+  transform: translateY(-1px);
+}
+
+.ctaButton:focus-visible {
+  outline: 2px solid #ff9500;
+  outline-offset: 2px;
+}
+
+.divider {
+  width: 100%;
+  max-width: 200px;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.social {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.socialLabel {
+  font-size: 0.875rem;
+  color: #b8bcc4;
+}
+
+.socialLinks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.socialLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: #b8bcc4;
+  border-radius: 8px;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+}
+
+.socialLink:hover {
+  color: #ff9500;
+  background-color: rgba(255, 149, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.socialLink:focus-visible {
+  outline: 2px solid #ff9500;
+  outline-offset: 2px;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+}
+
+.copyright {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.copyright p {
+  margin: 0;
+  font-size: 0.813rem;
+  color: #8b9099;
+}
+
+@media (min-width: 640px) {
+  .footer {
+    padding: 3rem 2rem 2rem;
+  }
+
+  .wrapper {
+    gap: 2rem;
+  }
+
+  .ctaTitle {
+    font-size: 1.5rem;
+  }
+
+  .ctaText {
+    font-size: 1rem;
+  }
+
+  .socialLinks {
+    gap: 1.5rem;
+  }
+
+  .socialLink {
+    width: 44px;
+    height: 44px;
+  }
+
+  .icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .footer {
+    padding: 3.5rem 2rem 2rem;
+  }
+}

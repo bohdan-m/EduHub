@@ -10,7 +10,7 @@ class AuthTests(APITestCase):
             email='test@example.com',
             password='testpassword123'
         )
-        self.token_url = reverse('token_obtain_pair')
+        self.token_url = reverse('login')
         self.refresh_url = reverse('token_refresh')
 
     def test_register(self):

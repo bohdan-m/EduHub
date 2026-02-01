@@ -1,0 +1,18 @@
+.container {
+    gap: 32px;
+    margin-top: 6vh;
+    margin-bottom: 6vh;
+}
+
+.header, .description {
+    text-align: left;
+    justify-content: center;
+}
+
+.header {
+    font-size: 36px;
+}
+
+.description {
+    font-size: 16px;
+}

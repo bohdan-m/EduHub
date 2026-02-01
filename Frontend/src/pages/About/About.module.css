@@ -1,0 +1,99 @@
+:root {
+  --about-accent: #ff9500;
+  --about-accent-bg: #fef3e9;
+  --about-icon-bg: #f4f4f5;
+  --about-text: #1a1a1a;
+  --about-text-muted: #6b7280;
+  --about-card-bg: #ffffff;
+  --about-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --about-radius: 12px;
+  --about-radius-sm: 8px;
+}
+
+.wrapper {
+  min-height: 100%;
+  padding: 0 clamp(1rem, 4vw, 2.5rem) clamp(2rem, 6vw, 3rem);
+}
+
+.cardsWrap {
+  margin-top: clamp(1.25rem, 3vw, 1.75rem);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(1rem, 3vw, 1.5rem);
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .cardsWrap {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: var(--about-card-bg);
+  border-radius: var(--about-radius);
+  box-shadow: var(--about-shadow);
+  padding: clamp(1.25rem, 3vw, 1.5rem);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 1.5vw, 0.75rem);
+}
+
+.iconWrap {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--about-radius-sm);
+  background: var(--about-icon-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconInner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--about-accent-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--about-accent);
+}
+
+.iconImg {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+  /* Tint black icons to orange (#ff9500) */
+  filter: brightness(0) saturate(100%) invert(62%) sepia(98%) saturate(1000%) hue-rotate(360deg) brightness(105%) contrast(105%);
+}
+
+.cardTitle {
+  font-size: clamp(1rem, 2.5vw, 1.125rem);
+  font-weight: 700;
+  color: var(--about-text);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.cardDesc {
+  font-size: clamp(0.875rem, 2vw, 0.95rem);
+  font-weight: 400;
+  color: var(--about-text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+}

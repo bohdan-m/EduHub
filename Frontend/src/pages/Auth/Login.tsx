@@ -16,7 +16,7 @@ function Login() {
 
   useEffect(() => {
     if (user) {
-      navigate("/dashboard")
+      navigate("/home")
     }
   }, [user, navigate])
 
@@ -28,7 +28,7 @@ function Login() {
     try {
       const response = await authApi.login({ username, password });
       setUser(response);
-      navigate("/dashboard")
+      navigate("/home")
     } catch (err: unknown) {
       let errorMessage = 'Error! Check your data';
     

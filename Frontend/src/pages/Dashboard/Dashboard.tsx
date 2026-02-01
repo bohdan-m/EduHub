@@ -4,7 +4,6 @@ import CoursesList from "../Courses/CoursesList";
 function Home () {
     return (
         <>
-            <HeaderPage />
             <CoursesList/>
         </>
 );

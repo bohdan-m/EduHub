@@ -4,7 +4,7 @@ import type { CourseListItem } from "../../utils/types/courses";
 import CoursesListItem from "../../components/Courses/CoursesListItem";
 import { useInView } from "react-intersection-observer";
 import styles from "./Courses.module.css"
-import DescriptionPage from "../../components/Header/DescriptionPage";
+import DescriptionPage from "../../components/Description/DescriptionPage";
 
 function CoursesList () {
     const [isLoading, setIsLoading] = useState(true)

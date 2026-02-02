@@ -4,7 +4,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env from project root (EduHub/) when present (e.g. local dev without Docker)
+# Load .env from project root
 _env_file = BASE_DIR.parent / ".env"
 if _env_file.exists():
     import environ

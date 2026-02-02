@@ -1,35 +1,38 @@
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env from project root
-_env_file = BASE_DIR.parent / ".env"
-if _env_file.exists():
-    import environ
-    environ.Env().read_env(env_file=str(_env_file))
+# Environment
 
-MEDIA_ROOT = BASE_DIR / 'media'
-MEDIA_URL = '/media/'
+ENVIRONMENT = os.getenv("ENVIRONMENT", "dev").lower()
+IS_PROD = ENVIRONMENT == "prod"
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# Load .env in dev only
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
+if not IS_PROD:
+    _env_file = BASE_DIR.parent / ".env"
+    if _env_file.exists():
+        try:
+            import environ
+            environ.Env().read_env(env_file=str(_env_file))
+        except ImportError:
+            pass
+
+# Core security
+
+SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY",
     "django-insecure-dev-only-change-in-production"
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
+DEBUG = os.getenv("DJANGO_DEBUG", "false").lower() == "true"
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
+ALLOWED_HOSTS = [
+    h for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",") if h
+]
 
-AUTH_USER_MODEL = 'users.User'
-
-# Application definition
+# Application
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -38,30 +41,32 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+
     'courses',
     'users',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
     'config.middlewares.RequestLoggingMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
 ]
 
-CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
-
-CORS_ALLOW_HEADERS = ["authorization", "content-type"]
-
 ROOT_URLCONF = 'config.urls'
+WSGI_APPLICATION = 'config.wsgi.application'
+
+# Templates
 
 TEMPLATES = [
     {
@@ -78,24 +83,21 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-import os
+# Database (Cloud SQL ready)
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'postgres'),
-        'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'password_default'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        'NAME': os.getenv('POSTGRES_DB', 'postgres'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'password_default'),
+        'HOST': os.getenv("POSTGRES_HOST", "localhost"),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        'CONN_MAX_AGE': 60 if IS_PROD else 0,
     }
 }
 
+# DRF
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -108,75 +110,77 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 5,
 }
 
+# CORS
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+_raw_cors = os.getenv("CORS_ALLOWED_ORIGINS", "")
+CORS_ALLOWED_ORIGINS = [o for o in _raw_cors.split(",") if o]
 
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
-
+CORS_ALLOW_HEADERS = ["authorization", "content-type"]
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# Static & Media
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.environ.get("STATIC_ROOT", BASE_DIR / "static")
+STATIC_ROOT = os.getenv("STATIC_ROOT", BASE_DIR / "static")
+
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.environ.get("MEDIA_ROOT", BASE_DIR / "media")
+MEDIA_ROOT = os.getenv("MEDIA_ROOT", BASE_DIR / "media")
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+# Security (prod)
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+if IS_PROD:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+# Logging (Cloud Run friendly)
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '[{asctime}] {levelname} {name}: {message}',
-            'style': '{',
+if IS_PROD:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {'class': 'logging.StreamHandler'},
         },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+        'root': {
+            'handlers': ['console'],
+            'level': 'INFO',
         },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': 'logs/django_requests.log',
-            'formatter': 'verbose',
+    }
+else:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '[{asctime}] {levelname} {name}: {message}',
+                'style': '{',
+            },
         },
-    },
-    'loggers': {
-        '': {
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose',
+            },
+            'file': {
+                'class': 'logging.FileHandler',
+                'filename': 'logs/django_requests.log',
+                'formatter': 'verbose',
+            },
+        },
+        'root': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
         },
-    },
-}
+    }
+
+# Default primary key
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

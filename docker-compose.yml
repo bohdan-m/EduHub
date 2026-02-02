@@ -53,6 +53,7 @@ services:
   frontend:
     build:
       context: ./Frontend
+      target: dev
       dockerfile: Dockerfile
     env_file: .env
     environment:

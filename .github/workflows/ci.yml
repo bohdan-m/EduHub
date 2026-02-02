@@ -170,7 +170,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./Backend
-          file: ./Backend/Dockerfile.backend
+          file: ./Backend/Dockerfile
           push: false
           load: true
           tags: eduhub-backend:test
@@ -197,7 +197,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./Frontend
-          file: ./Frontend/Dockerfile.frontend
+          file: ./Frontend/Dockerfile
           push: false
           load: true
           tags: eduhub-frontend:test

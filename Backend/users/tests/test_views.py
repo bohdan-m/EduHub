@@ -8,7 +8,8 @@ class AuthTests(APITestCase):
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
-            password='testpassword123'
+            password='testpassword123',
+            role='student',
         )
         self.token_url = reverse('login')
         self.refresh_url = reverse('token_refresh')

@@ -32,6 +32,8 @@ ALLOWED_HOSTS = [
     h for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",") if h
 ]
 
+AUTH_USER_MODEL = "users.User"
+
 # Application
 
 INSTALLED_APPS = [

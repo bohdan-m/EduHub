@@ -179,8 +179,8 @@ jobs:
 
       - name: Test backend Docker image
         run: |
-          docker run --rm eduhub-backend:test python --version
-          docker run --rm eduhub-backend:test pip list | grep -i django
+          docker run --rm --entrypoint python eduhub-backend:test --version
+          docker run --rm --entrypoint pip eduhub-backend:test list | grep -i django
 
   docker-frontend-build:
     name: Docker Frontend Build
@@ -198,6 +198,7 @@ jobs:
         with:
           context: ./Frontend
           file: ./Frontend/Dockerfile
+          target: dev
           push: false
           load: true
           tags: eduhub-frontend:test

@@ -51,44 +51,40 @@ It is built with **Django** for the backend and **React + TypeScript** (planned)
 
 ## Quick Start with Docker
 
-To launch the entire project, simply run:
+1. Copy the example env file: `cp .env.example .env`
+
+2. Launch the project:
 
 ```bash
 docker compose up -d
 ```
 
-That’s it — this command will automatically:
+This will build images, run migrations, optionally populate the database (dev), and expose backend at http://localhost:8000 and frontend at http://localhost:5173.
 
-1. Build the Docker images (if not yet built)
-2. Run all necessary default setup commands
-3. Initialize the database with default data via:
+---
 
-   ```bash
-   python manage.py populate_db
-   ```
+## Environment
+
+One `.env` file drives both dev and prod. Set `ENVIRONMENT=dev` or `ENVIRONMENT=prod`:
+
+| Variable | Dev | Prod |
+|----------|-----|------|
+| `ENVIRONMENT` | `dev` | `prod` |
+| `DJANGO_DEBUG` | `true` | `false` |
+| `ENABLE_POPULATE_DB` | `true` (optional) | `false` |
+
+**Production:** Set strong `DJANGO_SECRET_KEY` and `POSTGRES_PASSWORD`; never commit `.env`.
 
 ---
 
 ## About `populate_db`
 
-The `populate_db` command runs automatically **during the first container build**.
-It fills the database with essential demo data, including:
+When `ENVIRONMENT=dev` and `ENABLE_POPULATE_DB=true`, the backend seeds demo data on startup:
 
-* Two users:
+* Users: **student** / **teacher** (password: `1234`)
+* Two demo courses with stages and lessons
 
-  * **student** → password: `1234`
-  * **teacher** → password: `1234`
-* Two demo courses with related stages and lessons
-
-This script **will not run again** automatically, because it includes an internal check to ensure it only executes once.
-
----
-
-## Disabling Initial Population
-
-If you don’t want the database to be pre-filled during the first build,
-you can disable it by **removing line 7** from the `docker compose.yml` file —
-that’s the line responsible for calling the population script.
+It runs only once (skips if courses exist). Set `ENABLE_POPULATE_DB=false` to disable.
 
 ---
 

@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from users.models import User
 from courses.models import Course, CourseImage, Stage, Lesson
+import os
 
 
 def create_stage(course, order, title, lessons):
@@ -180,6 +181,10 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         """Main function to populate the database."""
+        if os.environ.get("ENABLE_POPULATE_DB", "false").lower() != "true":
+            self.stdout.write("Population disabled.")
+            return
+
         if Course.objects.exists():
             self.stdout.write(self.style.WARNING('Courses already exist. Skipping data population.'))
             return

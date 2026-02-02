@@ -1,14 +1,35 @@
+# Python
 venv/
-
+.venv/
 __pycache__/
 *.pyc
 
-*.sqlite3
+# Env files (use .env.example at project root)
+.env
+.env.*
+!.env.example
+
+# Logs
 *.log
 
-**/migrations/*.py
-!**/migrations/__init__.py
+# SQLite (not used in prod)
+*.sqlite3
 
+# Node
 node_modules/
-media/
+
+# Frontend build
 dist/
+
+# Django media (user uploads)
+media/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/

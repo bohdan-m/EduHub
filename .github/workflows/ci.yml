@@ -234,10 +234,7 @@ jobs:
       - name: Start services
         run: |
           docker compose up -d db
-          sleep 5
-          # Start web service (populate_db will run but should be idempotent)
           docker compose up -d web
-          sleep 5
           docker compose up -d frontend
 
       - name: Wait for services to be healthy

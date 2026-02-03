@@ -5,6 +5,8 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+RUN addgroup --system appgroup && adduser --system --group appuser
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     gcc \
@@ -16,11 +18,16 @@ COPY config/requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-COPY . .
 COPY entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && \
+    chmod +x /entrypoint.sh && \
+    chown appuser:appgroup /entrypoint.sh
 
-RUN sed -i 's/\r$//' /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY . .
+
+RUN chown -R appuser:appgroup /app
+
+USER appuser
 
 EXPOSE 8000
 

@@ -44,7 +44,7 @@ services:
     networks:
       - eduhub-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

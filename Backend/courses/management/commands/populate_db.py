@@ -192,14 +192,14 @@ class Command(BaseCommand):
         teacher = User.objects.create_user(
             username="teacher",
             email="teacher@gmail.com",
-            password="1234", 
+            password="teacher-demo-123",
             role="teacher"
         )
 
         student = User.objects.create_user(
             username="student",
             email="student@gmail.com",
-            password="1234",  
+            password="student-demo-123",
             role="student"
         )
 

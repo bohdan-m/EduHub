@@ -3,9 +3,12 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView, TokenBlacklistView
 from django.conf import settings
 from django.conf.urls.static import static
+from config.views import healthcheck
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', healthcheck, name='health-root'),
+    path('api/health/', healthcheck, name='health-api'),
     path('api/', include('users.urls')),
     path('api/', include('courses.urls')),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

@@ -5,6 +5,36 @@ import styles from "./Login.module.css";
 import { useNavigate } from "react-router";
 import axios from "axios";
 
+function getApiErrorMessage(err: unknown): string {
+  if (!axios.isAxiosError(err)) {
+    return "Error! Check your data";
+  }
+
+  const data = err.response?.data;
+
+  if (typeof data?.detail === "string") {
+    return data.detail;
+  }
+
+  if (typeof data?.message === "string") {
+    return data.message;
+  }
+
+  if (data && typeof data === "object") {
+    const firstValue = Object.values(data)[0];
+
+    if (Array.isArray(firstValue) && typeof firstValue[0] === "string") {
+      return firstValue[0];
+    }
+
+    if (typeof firstValue === "string") {
+      return firstValue;
+    }
+  }
+
+  return "Error! Check your data";
+}
+
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -30,16 +60,7 @@ function Login() {
       setUser(response);
       navigate("/home")
     } catch (err: unknown) {
-      let errorMessage = 'Error! Check your data';
-    
-      if (axios.isAxiosError(err)) {
-        errorMessage =
-          err.response?.data?.detail ??
-          err.response?.data?.message ??
-          errorMessage;
-      }
-    
-      setError(errorMessage);
+      setError(getApiErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

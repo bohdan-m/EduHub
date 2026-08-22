@@ -18,7 +18,7 @@ class AuthTests(APITestCase):
         body = {
             "username": "student",
             "email": "student@gmail.com",
-            "password": "1234",  
+            "password": "student-demo-123",
             "role": "student"
         }
         response = self.client.post('/api/register/', body, format='json')

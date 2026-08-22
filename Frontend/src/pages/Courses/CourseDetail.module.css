@@ -1,0 +1,260 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 24px 0 48px;
+}
+
+.backButton {
+    align-self: flex-start;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #111827;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.backButton:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(260px, 0.9fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.copy {
+    text-align: left;
+}
+
+.eyebrow {
+    margin: 0 0 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.title {
+    margin: 0;
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 1.05;
+    color: #111827;
+}
+
+.description {
+    max-width: 760px;
+    margin: 18px 0 0;
+    font-size: 17px;
+    line-height: 1.7;
+    color: #4b5563;
+}
+
+.metaCard {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 22px;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    background: #ffffff;
+    text-align: left;
+}
+
+.metaRow {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.metaLabel {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9ca3af;
+}
+
+.metaValue {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.imageGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.imageItem {
+    overflow: hidden;
+    border-radius: 18px;
+    background: #f3f4f6;
+}
+
+.image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+
+.curriculumSection {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    text-align: left;
+}
+
+.sectionHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sectionTitle {
+    margin: 0;
+    font-size: 28px;
+    color: #111827;
+}
+
+.sectionText {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #6b7280;
+}
+
+.stageGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.stageCard {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    background: #ffffff;
+}
+
+.stageHeader {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stageNumber {
+    flex-shrink: 0;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+    color: #111827;
+}
+
+.stageTitle {
+    margin: 0;
+    font-size: 20px;
+    color: #111827;
+}
+
+.lessonList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lessonItem {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.lessonOrder {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9ca3af;
+}
+
+.lessonTitle {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #374151;
+}
+
+.emptyState {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #6b7280;
+}
+
+.feedbackSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 64px 0;
+}
+
+.feedback {
+    margin: 0;
+    font-size: 16px;
+    color: #4b5563;
+}
+
+@media (max-width: 960px) {
+    .hero {
+        grid-template-columns: 1fr;
+    }
+
+    .stageGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .imageGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .page {
+        gap: 24px;
+        padding-top: 16px;
+    }
+
+    .imageGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .stageCard {
+        padding: 18px;
+    }
+
+    .title {
+        font-size: 30px;
+    }
+}

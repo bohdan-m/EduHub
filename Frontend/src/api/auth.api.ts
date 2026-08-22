@@ -1,4 +1,4 @@
-import type { CourseListResponse } from '../utils/types/courses';
+import type { CourseDetail, CourseListResponse } from '../utils/types/courses';
 import type { LoginRequest, RefreshRequest, RegisterRequest, User } from '../utils/types/user';
 import { apiClient } from './axios.config';
 
@@ -26,6 +26,11 @@ export const authApi = {
 export const coursesApi = {
   courses: async (url: string): Promise<CourseListResponse> => {
     const { data } = await apiClient.get<CourseListResponse>(url);
+    return data;
+  },
+
+  courseDetail: async (courseId: string): Promise<CourseDetail> => {
+    const { data } = await apiClient.get<CourseDetail>(`/courses/${courseId}/`);
     return data;
   },
 };

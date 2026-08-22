@@ -1,4 +1,5 @@
 import type { CourseListItem } from "../../utils/types/courses";
+import { useNavigate } from "react-router";
 import styles from "./CoursesList.module.css";
 
 interface CoursesListItemProps {
@@ -6,6 +7,8 @@ interface CoursesListItemProps {
 }
 
 function CoursesListItem({ course }: CoursesListItemProps) {
+    const navigate = useNavigate();
+
     return (
         <div className={styles.container}>
             <div className={styles.headerContainer}>
@@ -13,7 +16,13 @@ function CoursesListItem({ course }: CoursesListItemProps) {
                     <p className={styles.headerText1}>{course.title}</p>
                     <p className={styles.headerText2}>{course.description}</p>
                 </div>
-                <button className={styles.button}>View Course</button>
+                <button
+                    className={styles.button}
+                    onClick={() => navigate(`/courses/${course.id}`)}
+                    type="button"
+                >
+                    View Course
+                </button>
             </div>
             <ul className={styles.imagesContainer}>
                 {course.images.map(image => (
@@ -32,7 +41,7 @@ function CoursesListItem({ course }: CoursesListItemProps) {
                 <p className={styles.stageText}>Curriculum</p>
                 <ul className={styles.stagesContent}>
                     {course.stages.map(stage => (
-                        <div className={styles.stage}>
+                        <div className={styles.stage} key={stage.id}>
                             <p className={styles.stageOrder}>0{stage.order}</p>
                             <p className={styles.stageTitle}>{stage.title}</p>
                         </div>

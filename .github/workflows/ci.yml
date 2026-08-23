@@ -92,11 +92,10 @@ jobs:
 
       - name: Check Django code style (flake8)
         working-directory: ./Backend
-        continue-on-error: true
         run: |
           pip install flake8
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics || true
+          flake8 . --exclude migrations --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --exclude migrations --count --max-complexity=10 --max-line-length=127 --statistics
 
   frontend-lint:
     name: Frontend Lint & Type Check
@@ -124,6 +123,10 @@ jobs:
       - name: TypeScript type check
         working-directory: ./Frontend
         run: npx tsc --project tsconfig.app.json --noEmit
+
+      - name: Run frontend unit tests
+        working-directory: ./Frontend
+        run: npm run test:unit
 
   frontend-build:
     name: Frontend Build
@@ -242,8 +245,9 @@ jobs:
           echo "Waiting for database to be ready..."
           timeout 30 bash -c 'until docker compose exec -T db pg_isready -U postgres; do sleep 2; done'
           echo "Waiting for backend to be ready..."
-          timeout 60 bash -c 'until curl -f http://localhost:8000/ 2>/dev/null; do sleep 3; done' || true
-          sleep 5
+          timeout 60 bash -c 'until curl -fsS http://localhost:8000/api/health/ >/dev/null; do sleep 3; done'
+          echo "Waiting for frontend to be ready..."
+          timeout 60 bash -c 'until curl -fsS http://localhost:5173/ >/dev/null; do sleep 3; done'
 
       - name: Check service health
         run: |
@@ -253,12 +257,13 @@ jobs:
 
       - name: Test backend health endpoint
         run: |
-          echo "Testing backend endpoint..."
-          curl -f http://localhost:8000/ || echo "Backend health check failed (non-critical)"
+          echo "Testing backend endpoints..."
+          curl -fsS http://localhost:8000/api/health/
+          curl -fsS http://localhost:8000/api/courses/
           echo "Running Django system check..."
-          docker compose exec -T web python manage.py check || echo "Django check completed with warnings"
+          docker compose exec -T web python manage.py check
           echo "Verifying frontend is running..."
-          curl -f http://localhost:5173/ || echo "Frontend health check failed (non-critical)"
+          curl -fsS http://localhost:5173/
 
       - name: Stop services
         if: ${{ always() }}
@@ -301,7 +306,6 @@ jobs:
           find . -type f -size +5M ! -path "./.git/*" ! -path "./node_modules/*" ! -path "./venv/*" ! -path "./.venv/*" | head -20
 
       - name: Check for secrets
-        continue-on-error: true
         run: |
           if grep -r "password.*=.*['\"].*[a-zA-Z0-9]\{8,\}" Backend/ --include="*.py" | grep -v "test" | grep -v "password_default"; then
             echo "Potential hardcoded passwords found"

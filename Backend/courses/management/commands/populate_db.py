@@ -23,7 +23,7 @@ def create_course_with_stages(title, description, author, images, stages_data):
         description=description,
         author=author
     )
-    
+
     CourseImage.objects.bulk_create([
         CourseImage(course=course, image=img) for img in images
     ])
@@ -35,7 +35,7 @@ def create_course_with_stages(title, description, author, images, stages_data):
             title=stage_data["title"],
             lessons=stage_data["lessons"]
         )
-    
+
     return course
 
 
@@ -64,7 +64,10 @@ def get_course_data():
                     "title": "Programming Basics",
                     "lessons": [
                         ("Variables and Data Types", "https://www.youtube.com/watch?v=ohCDWZgNIU0"),
-                        ("Operators and Expressions", "https://www.youtube.com/watch?v=GEMZpw7ug-k&list=PLBlnK6fEyqRjdKzSsGiBpr6fAxawT9WWb"),
+                        (
+                            "Operators and Expressions",
+                            "https://www.youtube.com/watch?v=GEMZpw7ug-k&list=PLBlnK6fEyqRjdKzSsGiBpr6fAxawT9WWb",
+                        ),
                         ("Conditional Statements (if, else, elif)", "https://www.youtube.com/watch?v=f4KOjWS_KZs"),
                         ("Loops (for, while)", "https://www.youtube.com/watch?v=6iF8Xb7Z3wQ"),
                     ],
@@ -177,7 +180,7 @@ def get_course_data():
 
 class Command(BaseCommand):
     help = 'Populate database with initial courses and users'
-    
+
     @transaction.atomic
     def handle(self, *args, **options):
         """Main function to populate the database."""
@@ -188,15 +191,14 @@ class Command(BaseCommand):
         if Course.objects.exists():
             self.stdout.write(self.style.WARNING('Courses already exist. Skipping data population.'))
             return
-        
+
         teacher = User.objects.create_user(
             username="teacher",
             email="teacher@gmail.com",
             password="teacher-demo-123",
             role="teacher"
         )
-
-        student = User.objects.create_user(
+        User.objects.create_user(
             username="student",
             email="student@gmail.com",
             password="student-demo-123",
@@ -204,8 +206,8 @@ class Command(BaseCommand):
         )
 
         courses_data = get_course_data()
-        
-        for course_key, course_info in courses_data.items():
+
+        for course_info in courses_data.values():
             create_course_with_stages(
                 title=course_info["title"],
                 description=course_info["description"],

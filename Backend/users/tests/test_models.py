@@ -1,12 +1,14 @@
 from django.test import TestCase
+from django.db import IntegrityError
 from users.models import User
+
 
 class UserModelTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="student", 
-            role="student", 
-            email="email@email.com", 
+            username="student",
+            role="student",
+            email="email@email.com",
             password="1234"
         )
 
@@ -20,10 +22,10 @@ class UserModelTest(TestCase):
         self.assertEqual(str(self.user), "student, student")
 
     def test_user_unique(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(IntegrityError):
             User.objects.create_user(
-                username="student", 
-                role="student", 
+                username="student",
+                role="student",
                 email="email@email.com",
                 password="1234"
             )

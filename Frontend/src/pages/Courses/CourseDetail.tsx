@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { coursesApi } from "../../api/auth.api";
 import type { CourseDetail as CourseDetailItem, LessonItem } from "../../utils/types/courses";
+import { getYoutubeEmbedUrl } from "../../utils/youtube";
 import styles from "./CourseDetail.module.css";
 
 function formatDate(value: string) {
@@ -16,42 +17,6 @@ function formatDate(value: string) {
         month: "long",
         day: "numeric",
     });
-}
-
-function getYoutubeEmbedUrl(value: string) {
-    if (!value) {
-        return null;
-    }
-
-    try {
-        const url = new URL(value);
-        const host = url.hostname.replace(/^www\./, "");
-
-        if (host === "youtu.be") {
-            const videoId = url.pathname.slice(1);
-            return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-        }
-
-        if (host === "youtube.com" || host === "m.youtube.com") {
-            if (url.pathname === "/watch") {
-                const videoId = url.searchParams.get("v");
-                return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-            }
-
-            if (url.pathname.startsWith("/embed/")) {
-                return value;
-            }
-
-            if (url.pathname.startsWith("/shorts/")) {
-                const videoId = url.pathname.split("/")[2];
-                return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-            }
-        }
-    } catch (error) {
-        console.error(error);
-    }
-
-    return null;
 }
 
 function getFirstPlayableLesson(course: CourseDetailItem) {

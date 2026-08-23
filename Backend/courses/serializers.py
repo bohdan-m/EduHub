@@ -72,35 +72,35 @@ class CourseCreateSerializer(BaseCourseSerializer):
         stage_orders = [stage['order'] for stage in value]
         if len(stage_orders) != len(set(stage_orders)):
             raise serializers.ValidationError("Stage orders must be unique")
-        
+
         for stage in value:
             lesson_orders = [lesson['order'] for lesson in stage.get('lessons', [])]
             if len(lesson_orders) != len(set(lesson_orders)):
                 raise serializers.ValidationError("Lesson orders must be unique within each stage")
-        
+
         return value
 
     @transaction.atomic
     def create(self, validated_data):
         stages_data = validated_data.pop('stages', [])
         uploaded_images = validated_data.pop('uploaded_images', [])
-        
+
         course = Course.objects.create(**validated_data)
-        
+
         course_images = [
-            CourseImage(course=course, image=image) 
+            CourseImage(course=course, image=image)
             for image in uploaded_images
         ]
         CourseImage.objects.bulk_create(course_images)
-        
+
         for stage_data in stages_data:
             lessons_data = stage_data.pop('lessons', [])
             stage = Stage.objects.create(course=course, **stage_data)
-            
+
             stage_lessons = [
-                Lesson(stage=stage, **lesson_data) 
+                Lesson(stage=stage, **lesson_data)
                 for lesson_data in lessons_data
             ]
             Lesson.objects.bulk_create(stage_lessons)
-        
+
         return course

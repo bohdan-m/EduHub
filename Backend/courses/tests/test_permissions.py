@@ -3,6 +3,7 @@ from rest_framework.test import APIRequestFactory
 from users.models import User
 from courses.permissions import IsTeacher
 
+
 class IsTeacherPermissionTest(TestCase):
     def setUp(self):
         self.factory = APIRequestFactory()

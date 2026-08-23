@@ -3,11 +3,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from courses.models import Course, Stage, Lesson, CourseImage
 from courses.serializers import (
     CourseCreateSerializer,
-    CourseImageSerializer,
-    StageSerializer,
-    StageShortSerializer,
-    CoursesSerializer,
     CourseDetailSerializer,
+    CoursesSerializer,
+    StageSerializer,
     LessonSerializer
 )
 from users.models import User
@@ -75,7 +73,11 @@ class SerializerTestCase(TestCase):
         self.assertEqual(data['lessons'][0]['title'], self.lesson.title)
 
     def test_stage_serializer_deserialization_validation(self):
-        data = {'title': 'New Stage', 'order': 2, 'lessons': [{'title': 'Lesson 2', 'order': 2}]}
+        data = {
+            'title': 'New Stage',
+            'order': 2,
+            'lessons': [{'title': 'Lesson 2', 'url': 'https://youtu.be/aqz-KE-bpKQ', 'order': 2}],
+        }
         serializer = StageSerializer(data=data)
         self.assertTrue(serializer.is_valid())
         self.assertEqual(serializer.validated_data['title'], 'New Stage')
@@ -90,7 +92,7 @@ class SerializerTestCase(TestCase):
         data = serializer.data
         self.assertEqual(data['title'], self.stage.title)
         self.assertEqual(data['order'], self.stage.order)
-        self.assertNotIn('lessons', data)  
+        self.assertNotIn('lessons', data)
 
     # CourseCreateSerializer
 
@@ -113,6 +115,38 @@ class SerializerTestCase(TestCase):
         self.assertEqual(course.stages.count(), 1)
         self.assertEqual(course.stages.first().lessons.count(), 1)
 
+    def test_course_create_serializer_rejects_duplicate_stage_orders(self):
+        serializer = CourseCreateSerializer(data={
+            'title': 'New Course',
+            'description': 'Desc',
+            'stages': [
+                {'title': 'Stage 1', 'order': 1, 'lessons': []},
+                {'title': 'Stage 2', 'order': 1, 'lessons': []},
+            ],
+        })
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('stages', serializer.errors)
+
+    def test_course_create_serializer_rejects_duplicate_lesson_orders(self):
+        serializer = CourseCreateSerializer(data={
+            'title': 'New Course',
+            'description': 'Desc',
+            'stages': [
+                {
+                    'title': 'Stage 1',
+                    'order': 1,
+                    'lessons': [
+                        {'title': 'Lesson 1', 'url': 'https://youtu.be/aqz-KE-bpKQ', 'order': 1},
+                        {'title': 'Lesson 2', 'url': 'https://youtu.be/dQw4w9WgXcQ', 'order': 1},
+                    ]
+                }
+            ],
+        })
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('stages', serializer.errors)
+
     def test_course_create_serializer_empty_images(self):
         data = {
             'title': 'Course No Images',
@@ -129,7 +163,6 @@ class SerializerTestCase(TestCase):
     # CoursesSerializer
 
     def test_courses_serializer(self):
-        from courses.serializers import CoursesSerializer
         serializer = CoursesSerializer(self.course)
         data = serializer.data
         self.assertEqual(data['title'], self.course.title)
@@ -141,7 +174,6 @@ class SerializerTestCase(TestCase):
     # CourseDetailSerializer
 
     def test_course_detail_serializer(self):
-        from courses.serializers import CourseDetailSerializer
         serializer = CourseDetailSerializer(self.course)
         data = serializer.data
         self.assertEqual(data['title'], self.course.title)

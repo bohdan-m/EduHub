@@ -3,6 +3,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from users.models import User
 
+
 class AuthTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -26,7 +27,29 @@ class AuthTests(APITestCase):
         self.assertEqual(response.data['username'], body['username'])
         self.assertEqual(response.data['email'], body['email'])
         self.assertEqual(response.data['role'], body['role'])
-        self.assertNotIn('password', response.data) 
+        self.assertNotIn('password', response.data)
+
+    def test_register_rejects_duplicate_email(self):
+        body = {
+            "username": "another-student",
+            "email": "test@example.com",
+            "password": "student-demo-123",
+            "role": "student"
+        }
+        response = self.client.post('/api/register/', body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('email', response.data)
+
+    def test_register_rejects_weak_password(self):
+        body = {
+            "username": "weak-student",
+            "email": "weak@student.com",
+            "password": "12345678",
+            "role": "student"
+        }
+        response = self.client.post('/api/register/', body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('password', response.data)
 
     def test_obtain_token_pair_success(self):
         data = {
@@ -37,6 +60,9 @@ class AuthTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
+        self.assertEqual(response.data['username'], self.user.username)
+        self.assertEqual(response.data['email'], self.user.email)
+        self.assertEqual(response.data['role'], self.user.role)
 
     def test_obtain_token_pair_failure(self):
         data = {

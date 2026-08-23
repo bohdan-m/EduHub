@@ -36,6 +36,7 @@ class SerializerTestCase(TestCase):
 
         self.lesson = Lesson.objects.create(
             title="Lesson Title",
+            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             order=1,
             stage=self.stage
         )
@@ -51,14 +52,16 @@ class SerializerTestCase(TestCase):
         serializer = LessonSerializer(self.lesson)
         data = serializer.data
         self.assertEqual(data['title'], self.lesson.title)
+        self.assertEqual(data['url'], self.lesson.url)
         self.assertEqual(data['order'], self.lesson.order)
 
     def test_lesson_serializer_deserialization(self):
-        data = {'title': 'New Lesson', 'order': 2}
+        data = {'title': 'New Lesson', 'url': 'https://youtu.be/aqz-KE-bpKQ', 'order': 2}
         serializer = LessonSerializer(data=data)
         self.assertTrue(serializer.is_valid())
         lesson = serializer.save(stage=self.stage)
         self.assertEqual(lesson.title, 'New Lesson')
+        self.assertEqual(lesson.url, 'https://youtu.be/aqz-KE-bpKQ')
         self.assertEqual(lesson.stage, self.stage)
 
     # StageSerializer
@@ -99,7 +102,7 @@ class SerializerTestCase(TestCase):
                 {
                     'title': 'Stage 1',
                     'order': 1,
-                    'lessons': [{'title': 'Lesson 1', 'order': 1}]
+                    'lessons': [{'title': 'Lesson 1', 'url': 'https://www.youtube.com/watch?v=ysz5S6PUM-U', 'order': 1}]
                 }
             ],
         }
@@ -146,3 +149,4 @@ class SerializerTestCase(TestCase):
         self.assertIn('images', data)
         self.assertEqual(len(data['stages'][0]['lessons']), 1)
         self.assertEqual(data['stages'][0]['lessons'][0]['title'], self.lesson.title)
+        self.assertEqual(data['stages'][0]['lessons'][0]['url'], self.lesson.url)

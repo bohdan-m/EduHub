@@ -13,7 +13,7 @@ class CourseImageSerializer(serializers.ModelSerializer):
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
-        fields = ['id', 'title', 'order']
+        fields = ['id', 'title', 'url', 'order']
 
 
 class StageSerializer(serializers.ModelSerializer):

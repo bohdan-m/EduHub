@@ -19,6 +19,7 @@ export interface StageShort {
 export interface LessonItem {
     id: number
     title: string
+    url: string
     order: number
 }
 

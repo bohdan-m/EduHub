@@ -26,7 +26,12 @@ class CourseViewTests(APITestCase):
             author=self.user
         )
         self.stage = Stage.objects.create(title="Stage 1", order=1, course=self.course)
-        self.lesson = Lesson.objects.create(title="Lesson 1", order=1, stage=self.stage)
+        self.lesson = Lesson.objects.create(
+            title="Lesson 1",
+            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            order=1,
+            stage=self.stage
+        )
         self.image = CourseImage.objects.create(
             course=self.course,
             image=SimpleUploadedFile("test.jpg", b"file_content", content_type="image/jpeg")
@@ -42,7 +47,7 @@ class CourseViewTests(APITestCase):
                 {
                     "title": "Stage A",
                     "order": 1,
-                    "lessons": [{"title": "Lesson A1", "order": 1}]
+                    "lessons": [{"title": "Lesson A1", "url": "https://youtu.be/aqz-KE-bpKQ", "order": 1}]
                 }
             ],
             "uploaded_images": []
@@ -69,7 +74,15 @@ class CourseViewTests(APITestCase):
         self.assertEqual(response.data['title'], self.course.title)
         self.assertEqual(len(response.data['stages']), 1)
         self.assertEqual(len(response.data['stages'][0]['lessons']), 1)
+        self.assertEqual(response.data['stages'][0]['lessons'][0]['url'], self.lesson.url)
         self.assertEqual(len(response.data['images']), 1)
+
+    def test_course_detail_is_public(self):
+        url = reverse('course-detail', kwargs={'pk': self.course.id})
+        anonymous_client = APIClient()
+        response = anonymous_client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], self.course.title)
 
     # CourseListView 
     def test_course_list(self):

@@ -23,6 +23,7 @@ class CourseDeleteView(generics.DestroyAPIView):
 
 class CourseDetailView(generics.RetrieveAPIView):
     serializer_class = CourseDetailSerializer
+    permission_classes = [AllowAny]
     lookup_field = 'pk'
 
     def get_queryset(self):

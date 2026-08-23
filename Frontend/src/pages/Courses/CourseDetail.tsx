@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { coursesApi } from "../../api/auth.api";
-import type { CourseDetail as CourseDetailItem } from "../../utils/types/courses";
+import type { CourseDetail as CourseDetailItem, LessonItem } from "../../utils/types/courses";
 import styles from "./CourseDetail.module.css";
 
 function formatDate(value: string) {
@@ -18,11 +18,59 @@ function formatDate(value: string) {
     });
 }
 
+function getYoutubeEmbedUrl(value: string) {
+    if (!value) {
+        return null;
+    }
+
+    try {
+        const url = new URL(value);
+        const host = url.hostname.replace(/^www\./, "");
+
+        if (host === "youtu.be") {
+            const videoId = url.pathname.slice(1);
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+        }
+
+        if (host === "youtube.com" || host === "m.youtube.com") {
+            if (url.pathname === "/watch") {
+                const videoId = url.searchParams.get("v");
+                return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+            }
+
+            if (url.pathname.startsWith("/embed/")) {
+                return value;
+            }
+
+            if (url.pathname.startsWith("/shorts/")) {
+                const videoId = url.pathname.split("/")[2];
+                return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+            }
+        }
+    } catch (error) {
+        console.error(error);
+    }
+
+    return null;
+}
+
+function getFirstPlayableLesson(course: CourseDetailItem) {
+    for (const stage of course.stages) {
+        const lesson = stage.lessons.find((item) => Boolean(getYoutubeEmbedUrl(item.url)));
+        if (lesson) {
+            return lesson;
+        }
+    }
+
+    return null;
+}
+
 function CourseDetail() {
     const navigate = useNavigate();
     const { courseId } = useParams();
 
     const [course, setCourse] = useState<CourseDetailItem | null>(null);
+    const [selectedLesson, setSelectedLesson] = useState<LessonItem | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -39,6 +87,7 @@ function CourseDetail() {
                 setError("");
                 const data = await coursesApi.courseDetail(courseId);
                 setCourse(data);
+                setSelectedLesson(getFirstPlayableLesson(data));
             } catch (fetchError) {
                 console.error(fetchError);
                 setError("We could not load this course right now.");
@@ -64,6 +113,8 @@ function CourseDetail() {
             </section>
         );
     }
+
+    const selectedVideoUrl = selectedLesson ? getYoutubeEmbedUrl(selectedLesson.url) : null;
 
     return (
         <section className={styles.page}>
@@ -108,6 +159,38 @@ function CourseDetail() {
                 </ul>
             )}
 
+            <section className={styles.playerSection}>
+                <div className={styles.sectionHeader}>
+                    <h2 className={styles.sectionTitle}>Lesson player</h2>
+                    <p className={styles.sectionText}>
+                        Watch the selected lesson directly inside the course page.
+                    </p>
+                </div>
+
+                {selectedLesson && selectedVideoUrl ? (
+                    <div className={styles.playerCard}>
+                        <div className={styles.playerFrame}>
+                            <iframe
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                                className={styles.iframe}
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                src={selectedVideoUrl}
+                                title={selectedLesson.title}
+                            />
+                        </div>
+                        <div className={styles.playerMeta}>
+                            <span className={styles.playerLabel}>Now playing</span>
+                            <h3 className={styles.playerTitle}>{selectedLesson.title}</h3>
+                        </div>
+                    </div>
+                ) : (
+                    <div className={styles.playerPlaceholder}>
+                        <p className={styles.emptyState}>No playable YouTube lesson is available for this course yet.</p>
+                    </div>
+                )}
+            </section>
+
             <section className={styles.curriculumSection}>
                 <div className={styles.sectionHeader}>
                     <h2 className={styles.sectionTitle}>Curriculum</h2>
@@ -130,11 +213,22 @@ function CourseDetail() {
                                 {stage.lessons.length > 0 ? (
                                     <ol className={styles.lessonList}>
                                         {stage.lessons.map((lesson) => (
-                                            <li className={styles.lessonItem} key={lesson.id}>
-                                                <span className={styles.lessonOrder}>
-                                                    Lesson {String(lesson.order).padStart(2, "0")}
-                                                </span>
-                                                <span className={styles.lessonTitle}>{lesson.title}</span>
+                                            <li key={lesson.id}>
+                                                <button
+                                                    className={`${styles.lessonButton} ${selectedLesson?.id === lesson.id ? styles.lessonButtonActive : ""}`}
+                                                    onClick={() => setSelectedLesson(lesson)}
+                                                    type="button"
+                                                >
+                                                    <span className={styles.lessonItem}>
+                                                        <span className={styles.lessonOrder}>
+                                                            Lesson {String(lesson.order).padStart(2, "0")}
+                                                        </span>
+                                                        <span className={styles.lessonTitle}>{lesson.title}</span>
+                                                        <span className={styles.lessonStatus}>
+                                                            {getYoutubeEmbedUrl(lesson.url) ? "Playable" : "Unavailable"}
+                                                        </span>
+                                                    </span>
+                                                </button>
                                             </li>
                                         ))}
                                     </ol>

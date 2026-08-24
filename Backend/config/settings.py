@@ -185,6 +185,42 @@ if IS_PROD:
         },
     }
 else:
+    _default_log_dir = BASE_DIR.parent / "logs"
+    _fallback_log_dir = Path(tempfile.gettempdir()) / "eduhub-logs"
+    _log_dir = Path(os.getenv("DJANGO_LOG_DIR", _default_log_dir))
+    _log_file = _log_dir / "django_requests.log"
+    _file_handler_enabled = True
+
+    try:
+        _log_dir.mkdir(parents=True, exist_ok=True)
+        with _log_file.open("a", encoding="utf-8"):
+            pass
+    except OSError:
+        _log_dir = _fallback_log_dir
+        _log_file = _log_dir / "django_requests.log"
+        try:
+            _log_dir.mkdir(parents=True, exist_ok=True)
+            with _log_file.open("a", encoding="utf-8"):
+                pass
+        except OSError:
+            _file_handler_enabled = False
+
+    _handlers = {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    }
+    _root_handlers = ['console']
+
+    if _file_handler_enabled:
+        _handlers['file'] = {
+            'class': 'logging.FileHandler',
+            'filename': str(_log_file),
+            'formatter': 'verbose',
+        }
+        _root_handlers.append('file')
+
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
@@ -194,19 +230,9 @@ else:
                 'style': '{',
             },
         },
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
-                'formatter': 'verbose',
-            },
-            'file': {
-                'class': 'logging.FileHandler',
-                'filename': 'logs/django_requests.log',
-                'formatter': 'verbose',
-            },
-        },
+        'handlers': _handlers,
         'root': {
-            'handlers': ['console', 'file'],
+            'handlers': _root_handlers,
             'level': 'INFO',
         },
     }

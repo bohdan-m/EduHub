@@ -8,3 +8,73 @@
 .coursesList {
     list-style: none;
 }
+
+.teacherPanel {
+    max-width: 1200px;
+    margin: 0 auto 32px;
+    padding: 24px 28px;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ffffff 0%, #fbfbfc 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    text-align: left;
+}
+
+.teacherPanelCopy {
+    max-width: 720px;
+}
+
+.teacherPanelEyebrow {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #98a2b3;
+}
+
+.teacherPanelTitle {
+    margin: 0 0 10px;
+    font-size: 28px;
+    color: #101828;
+}
+
+.teacherPanelText {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #667085;
+}
+
+.teacherPanelButton {
+    min-height: 48px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 999px;
+    background: #ff9500;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .teacherPanel {
+        margin-left: 20px;
+        margin-right: 20px;
+        padding: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .teacherPanelTitle {
+        font-size: 22px;
+    }
+
+    .teacherPanelButton {
+        width: 100%;
+    }
+}

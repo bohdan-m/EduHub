@@ -30,3 +30,23 @@ test("reads first validation error from axios response arrays", () => {
 
     assert.equal(getApiErrorMessage(error), "User with this email already exists.");
 });
+
+test("reads nested validation error objects", () => {
+    const error = new AxiosError(
+        "Request failed",
+        "400",
+        undefined,
+        undefined,
+        {
+            data: {
+                uploaded_images: [
+                    {
+                        image: ["Upload a valid image."],
+                    },
+                ],
+            },
+        } as never,
+    );
+
+    assert.equal(getApiErrorMessage(error), "Upload a valid image.");
+});

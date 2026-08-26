@@ -1,5 +1,33 @@
 import axios from "axios";
 
+function extractMessage(value: unknown): string | null {
+    if (typeof value === "string") {
+        return value;
+    }
+
+    if (Array.isArray(value)) {
+        for (const item of value) {
+            const message = extractMessage(item);
+            if (message) {
+                return message;
+            }
+        }
+
+        return null;
+    }
+
+    if (value && typeof value === "object") {
+        for (const nestedValue of Object.values(value)) {
+            const message = extractMessage(nestedValue);
+            if (message) {
+                return message;
+            }
+        }
+    }
+
+    return null;
+}
+
 export function getApiErrorMessage(err: unknown): string {
     if (!axios.isAxiosError(err)) {
         return "Error! Check your data";
@@ -15,16 +43,9 @@ export function getApiErrorMessage(err: unknown): string {
         return data.message;
     }
 
-    if (data && typeof data === "object") {
-        const firstValue = Object.values(data)[0];
-
-        if (Array.isArray(firstValue) && typeof firstValue[0] === "string") {
-            return firstValue[0];
-        }
-
-        if (typeof firstValue === "string") {
-            return firstValue;
-        }
+    const extractedMessage = extractMessage(data);
+    if (extractedMessage) {
+        return extractedMessage;
     }
 
     return "Error! Check your data";

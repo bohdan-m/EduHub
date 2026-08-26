@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { coursesApi } from "../../api/auth.api";
 import type { CourseListItem } from "../../utils/types/courses";
 import CoursesListItem from "../../components/Courses/CoursesListItem";
 import { useInView } from "react-intersection-observer";
 import styles from "./Courses.module.css"
 import DescriptionPage from "../../components/Description/DescriptionPage";
+import { useUserStore } from "../../store/store";
 
 function CoursesList () {
+    const navigate = useNavigate()
+    const user = useUserStore((state) => state.user)
     const [isLoading, setIsLoading] = useState(true)
     const [isFetchingMore, setIsFetchingMore] = useState(false)
 
@@ -55,6 +59,20 @@ function CoursesList () {
     return (
         <div>
             <DescriptionPage header="Online Courses from Qualified Teachers" description="Welcome to our online courses page, where you can improve your skills in any field. Choose one of our courses, designed to provide you with comprehensive knowledge and practical experience from qualified instructors. Explore the courses below and find the one that is perfect for your learning needs." />
+            {user?.role === "teacher" && (
+                <section className={styles.teacherPanel}>
+                    <div className={styles.teacherPanelCopy}>
+                        <p className={styles.teacherPanelEyebrow}>Teacher workspace</p>
+                        <h2 className={styles.teacherPanelTitle}>Publish a new course without leaving the dashboard.</h2>
+                        <p className={styles.teacherPanelText}>
+                            Create a full curriculum with staged lessons and optional cover imagery using the same minimal course system students already browse.
+                        </p>
+                    </div>
+                    <button className={styles.teacherPanelButton} onClick={() => navigate("/courses/create")} type="button">
+                        Create new course
+                    </button>
+                </section>
+            )}
             {courses.length > 0 ? (
             <ul className={styles.coursesContainer}>
                 {courses.map(course => (

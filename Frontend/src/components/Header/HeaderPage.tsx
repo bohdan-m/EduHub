@@ -8,6 +8,7 @@ function HeaderPage() {
     const { user, isAuthenticated, logout } = useUserStore();
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const isTeacher = user?.role === "teacher";
 
     const handleLogout = () => {
         const refresh = user?.refresh;
@@ -53,6 +54,11 @@ function HeaderPage() {
             </nav>
 
             <div className={styles.auth}>
+                {isTeacher && (
+                    <button className={styles.createButton} onClick={() => navigate('/courses/create')}>
+                        Create Course
+                    </button>
+                )}
                 {isAuthenticated() ? (
                     <button
                         className={styles.navButton}
@@ -74,6 +80,11 @@ function HeaderPage() {
                     <button className={styles.mobileNavButton} onClick={() => { navigate('/about'); setIsMobileMenuOpen(false); }}>About Us</button>
                     <button className={styles.mobileNavButton} onClick={() => { navigate('/pricing'); setIsMobileMenuOpen(false); }}>Pricing</button>
                     <button className={styles.mobileNavButton} onClick={() => { navigate('/contact'); setIsMobileMenuOpen(false); }}>Contact</button>
+                    {isTeacher && (
+                        <button className={styles.mobileLoginButton} onClick={() => { navigate('/courses/create'); setIsMobileMenuOpen(false); }}>
+                            Create Course
+                        </button>
+                    )}
                     
                     <div className={styles.mobileAuth}>
                         {isAuthenticated() ? (

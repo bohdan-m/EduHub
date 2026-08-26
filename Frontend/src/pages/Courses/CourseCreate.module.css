@@ -1,0 +1,415 @@
+.page {
+    width: min(1120px, 100%);
+    margin: 0 auto;
+    padding: 24px 0 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+    gap: 24px;
+    align-items: start;
+    text-align: left;
+}
+
+.heroCopy {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.eyebrow {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8b949e;
+}
+
+.title {
+    margin: 0;
+    font-size: clamp(34px, 5vw, 54px);
+    line-height: 1;
+    color: #101828;
+}
+
+.subtitle {
+    margin: 0;
+    max-width: 760px;
+    font-size: 17px;
+    line-height: 1.7;
+    color: #475467;
+}
+
+.heroAside {
+    padding: 22px;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfbfc 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+}
+
+.asideTitle {
+    margin: 0;
+    font-size: 18px;
+    color: #101828;
+}
+
+.asideList {
+    margin: 0;
+    padding-left: 18px;
+    color: #475467;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.section {
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    text-align: left;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.sectionTitleWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sectionTitle {
+    margin: 0;
+    font-size: 24px;
+    color: #101828;
+}
+
+.sectionText {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #667085;
+}
+
+.fieldGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fieldWide {
+    grid-column: 1 / -1;
+}
+
+.label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.input,
+.textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px;
+    border: 1px solid #d0d5dd;
+    border-radius: 16px;
+    background: #fcfcfd;
+    color: #111827;
+    font-size: 15px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.input:focus,
+.textarea:focus {
+    outline: none;
+    border-color: #ff9500;
+    box-shadow: 0 0 0 4px rgba(255, 149, 0, 0.14);
+    background: #ffffff;
+}
+
+.textarea {
+    min-height: 140px;
+    resize: vertical;
+}
+
+.hint {
+    font-size: 13px;
+    color: #667085;
+}
+
+.stageList {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.stageCard {
+    border: 1px solid #eceef2;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+    overflow: hidden;
+}
+
+.stageCardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid #eceef2;
+}
+
+.stageBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 42px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: #111827;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.stageMeta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.stageHeading {
+    margin: 0;
+    font-size: 18px;
+    color: #101828;
+}
+
+.stageCardBody {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.lessonList {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.lessonCard {
+    padding: 18px;
+    border: 1px solid #eceef2;
+    border-radius: 18px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.lessonHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.lessonIndex {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #98a2b3;
+}
+
+.actionRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.secondaryButton,
+.ghostButton,
+.primaryButton,
+.dangerButton {
+    min-height: 46px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.secondaryButton:hover,
+.ghostButton:hover,
+.primaryButton:hover,
+.dangerButton:hover {
+    transform: translateY(-1px);
+}
+
+.primaryButton {
+    padding: 0 20px;
+    border: 0;
+    background: #ff9500;
+    color: #ffffff;
+}
+
+.primaryButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.secondaryButton {
+    padding: 0 18px;
+    border: 1px solid #d0d5dd;
+    background: #ffffff;
+    color: #111827;
+}
+
+.ghostButton {
+    padding: 0 16px;
+    border: 1px dashed #d0d5dd;
+    background: #fcfcfd;
+    color: #344054;
+}
+
+.dangerButton {
+    padding: 0 16px;
+    border: 1px solid #f3d3d7;
+    background: #fff5f6;
+    color: #b42318;
+}
+
+.footerBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.feedback {
+    margin: 0;
+    font-size: 14px;
+    color: #667085;
+}
+
+.errorBox,
+.successBox {
+    padding: 16px 18px;
+    border-radius: 18px;
+    text-align: left;
+    font-size: 14px;
+}
+
+.errorBox {
+    border: 1px solid #f3d3d7;
+    background: #fff5f6;
+    color: #b42318;
+}
+
+.successBox {
+    border: 1px solid #cce8d5;
+    background: #f3fbf6;
+    color: #067647;
+}
+
+.emptyState {
+    padding: 18px;
+    border: 1px dashed #d0d5dd;
+    border-radius: 18px;
+    background: #fcfcfd;
+    color: #667085;
+}
+
+.authNotice {
+    max-width: 720px;
+    margin: 72px auto;
+    padding: 28px;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    background: #ffffff;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+@media (max-width: 960px) {
+    .hero {
+        grid-template-columns: 1fr;
+    }
+
+    .fieldGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding-top: 8px;
+    }
+
+    .section,
+    .heroAside {
+        padding: 20px;
+    }
+
+    .stageCardHeader,
+    .stageCardBody,
+    .lessonCard {
+        padding: 16px;
+    }
+
+    .sectionHeader,
+    .stageCardHeader,
+    .lessonHeader,
+    .footerBar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .actionRow {
+        width: 100%;
+    }
+
+    .primaryButton,
+    .secondaryButton,
+    .ghostButton,
+    .dangerButton {
+        width: 100%;
+        justify-content: center;
+    }
+}

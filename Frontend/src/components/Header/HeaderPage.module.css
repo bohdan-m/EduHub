@@ -43,6 +43,23 @@
     gap: 16px;
 }
 
+.createButton {
+    padding: 12px 20px;
+    border-radius: 999px;
+    border: 1px solid #f1f1f3;
+    background-color: #ffffff;
+    font-size: 16px;
+    color: #262626;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.3s ease, color 0.3s ease;
+}
+
+.createButton:hover {
+    color: #ff9500;
+    border-color: #ffd08a;
+}
+
 .navButton {
     background: none;
     border: none;
@@ -177,6 +194,11 @@
     .loginButton {
         padding: 10px 20px;
         font-size: 16px;
+    }
+
+    .createButton {
+        padding: 10px 16px;
+        font-size: 15px;
     }
 }
 

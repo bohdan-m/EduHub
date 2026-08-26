@@ -56,3 +56,22 @@ export interface CourseDetail {
     images: CourseImage[]
     stages: StageDetail[]
 }
+
+export interface CourseCreateLessonInput {
+    title: string
+    url: string
+    order: number
+}
+
+export interface CourseCreateStageInput {
+    title: string
+    order: number
+    lessons: CourseCreateLessonInput[]
+}
+
+export interface CourseCreateInput {
+    title: string
+    description: string
+    stages: CourseCreateStageInput[]
+    uploaded_images?: File[]
+}

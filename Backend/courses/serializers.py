@@ -1,3 +1,4 @@
+import json
 from rest_framework import serializers
 from courses.models import Course, CourseImage, Stage, Lesson
 from users.serializers import UserSerializer
@@ -67,6 +68,30 @@ class CourseCreateSerializer(BaseCourseSerializer):
 
     class Meta(BaseCourseSerializer.Meta):
         fields = BaseCourseSerializer.Meta.fields + ['stages', 'uploaded_images']
+
+    def to_internal_value(self, data):
+        if hasattr(data, "getlist"):
+            mutable_data = {}
+            list_fields = {"uploaded_images"}
+
+            for key in data.keys():
+                values = data.getlist(key)
+                if key in list_fields:
+                    mutable_data[key] = values
+                else:
+                    mutable_data[key] = values if len(values) > 1 else data.get(key)
+        else:
+            mutable_data = dict(data)
+
+        stages_data = mutable_data.get('stages')
+
+        if isinstance(stages_data, str):
+            try:
+                mutable_data['stages'] = json.loads(stages_data)
+            except ValueError as exc:
+                raise serializers.ValidationError({'stages': 'Invalid stages payload'}) from exc
+
+        return super().to_internal_value(mutable_data)
 
     def validate_stages(self, value):
         stage_orders = [stage['order'] for stage in value]

@@ -160,6 +160,19 @@ class SerializerTestCase(TestCase):
         self.assertEqual(course.stages.count(), 0)
         self.assertEqual(course.images.count(), 0)
 
+    def test_course_create_serializer_accepts_stringified_stages(self):
+        serializer = CourseCreateSerializer(data={
+            'title': 'Multipart Course',
+            'description': 'Desc',
+            'stages': '[{"title":"Stage 1","order":1,"lessons":[{"title":"Lesson 1","url":"https://youtu.be/aqz-KE-bpKQ","order":1}]}]',
+            'uploaded_images': []
+        })
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        course = serializer.save(author=self.user)
+        self.assertEqual(course.stages.count(), 1)
+        self.assertEqual(course.stages.first().lessons.count(), 1)
+
     # CoursesSerializer
 
     def test_courses_serializer(self):

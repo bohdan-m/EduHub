@@ -10,6 +10,7 @@ import Pricing from './pages/Pricing/Pricing'
 import Footer from './components/Footer/Footer'
 import HeaderPage from './components/Header/HeaderPage'
 import CourseDetail from './pages/Courses/CourseDetail'
+import CourseCreate from './pages/Courses/CourseCreate'
 
 // function ProtectedRoute({ children }: { children: React.ReactNode }) {
 //   const isAuthenticated = useUserStore((state) => !!state.user?.access)
@@ -68,6 +69,10 @@ function AppLayout() {
             <Route
               path="/courses/:courseId"
               element={<CourseDetail />}
+            />
+            <Route
+              path="/courses/create"
+              element={<CourseCreate />}
             />
             <Route 
               path="/" 

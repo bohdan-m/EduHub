@@ -91,7 +91,7 @@ The pipeline uses GitHub Actions caching for:
 
 ## Notes
 
-1. **Database Configuration**: Ensure `Backend/config/settings.py` uses the correct database name. Currently, there may be a mismatch between settings.py (`postgres`) and docker compose.yml (`eduhub`).
+1. **Database Configuration**: CI and Docker Compose set `POSTGRES_DB=eduhub`; Django consumes that environment variable. The `postgres` value in `settings.py` is only the fallback when the variable is absent.
 
 2. **populate_db Command**: The docker compose integration test runs the `populate_db` management command. Ensure this command is idempotent or handles errors gracefully.
 

@@ -38,5 +38,5 @@ When `ENVIRONMENT=dev` and `ENABLE_POPULATE_DB=true`, the backend seeds demo use
 ## Notes
 
 - The frontend still includes a local fallback mode so it can be reviewed even if the backend is temporarily unavailable.
-- Auth persistence in the frontend uses session storage.
+- Auth persistence in the frontend uses local storage (`user-storage`). Treat its JWT values as sensitive and do not log them.
 - The backend now exposes a simple health endpoint used by Docker health checks.

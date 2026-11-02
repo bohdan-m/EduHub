@@ -1,0 +1,142 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+/*
+ * "Ink and sage" palette: the single source of truth for color.
+ * HeroUI declares its tokens inside @layer base, so these unlayered
+ * overrides win; derived tokens (soft, hover, border levels) follow from them.
+ * Contrast (WCAG): white on accent 5.8:1, accent text on background 5.3:1,
+ * accent on accent-soft 4.8:1, muted on background 5.7:1, ink on highlight 6.6:1.
+ * White on the gold highlight is only 2.4:1, so gold fills take ink text and
+ * gold used as text is the darker --highlight-ink (5.0:1).
+ */
+:root {
+  color-scheme: light;
+  --radius: 0.625rem;
+  --field-border-width: 1px;
+
+  --background: #f6f5f0;
+  --foreground: #1f2421;
+  --surface: #ffffff;
+  --surface-foreground: var(--foreground);
+  --surface-secondary: #f0efe9;
+  --surface-tertiary: #e9e8e1;
+  --overlay: #ffffff;
+  --muted: #5b625d;
+
+  --default: #ecebe5;
+  --default-foreground: var(--foreground);
+
+  --accent: #3f6f5a;
+  --accent-foreground: #ffffff;
+  --accent-hover: #355e4c;
+  --accent-pressed: #2c4f40;
+  --accent-soft: #e3ede7;
+  --accent-soft-foreground: #2f5444;
+  --accent-soft-hover: #d6e5dc;
+
+  --highlight: #c9a24a;
+  --highlight-foreground: var(--foreground);
+  --highlight-ink: #8a6a1f;
+  --highlight-soft: #f4ecd9;
+
+  /* the logo tile keeps the brand sage in both themes */
+  --brand: #3f6f5a;
+
+  --warning: var(--highlight);
+  --warning-foreground: var(--foreground);
+
+  --border: #e2e0d8;
+  --separator: #e8e6df;
+  --focus: var(--accent);
+  --link: var(--accent);
+
+  --field-background: #ffffff;
+  --field-foreground: var(--foreground);
+  --field-placeholder: var(--muted);
+  --field-border: #d6d4cb;
+
+  --surface-shadow: 0 1px 2px 0 rgba(31, 36, 33, 0.05);
+}
+
+.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #141816;
+  --foreground: #e7e9e4;
+  --surface: #1c211e;
+  --surface-secondary: #232925;
+  --surface-tertiary: #2a312c;
+  --overlay: #1c211e;
+  --muted: #a2aaa4;
+
+  --default: #262c28;
+  --default-foreground: var(--foreground);
+
+  --accent: #7db39a;
+  --accent-foreground: #0f1411;
+  --accent-hover: #8fc0a9;
+  --accent-pressed: #6ca189;
+  --accent-soft: #22332b;
+  --accent-soft-foreground: #9cc8b3;
+  --accent-soft-hover: #294035;
+
+  --highlight: #d4b062;
+  --highlight-foreground: #1f2421;
+  --highlight-ink: #d4b062;
+  --highlight-soft: #332c1c;
+
+  --border: #2c332f;
+  --separator: #262c28;
+
+  --field-background: #1c211e;
+  --field-border: #343c37;
+
+  --surface-shadow: 0 0 0 0 transparent;
+}
+
+/* One stroke weight for every Tabler icon (its default of 2 reads heavy next to body text) */
+.tabler-icon {
+  stroke-width: 1.75;
+}
+
+@theme inline {
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-highlight-ink: var(--highlight-ink);
+  --color-highlight-soft: var(--highlight-soft);
+  --color-brand: var(--brand);
+}
+
+.button--primary {
+  --button-bg-hover: var(--accent-hover);
+  --button-bg-pressed: var(--accent-pressed);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100dvh;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  p {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

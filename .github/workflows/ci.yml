@@ -16,7 +16,7 @@ env:
   POSTGRES_DB: eduhub
   POSTGRES_HOST: localhost
   POSTGRES_PORT: 5432
-  PYTHON_VERSION: '3.10'
+  PYTHON_VERSION: '3.12'
   NODE_VERSION: '22'
 
 jobs:
@@ -123,7 +123,7 @@ jobs:
 
       - name: TypeScript type check
         working-directory: ./Frontend
-        run: npx tsc --project tsconfig.app.json --noEmit
+        run: npm run typecheck
 
   frontend-build:
     name: Frontend Build
@@ -152,7 +152,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: Frontend/dist
+          path: Frontend/.next
           retention-days: 1
 
   docker-backend-build:

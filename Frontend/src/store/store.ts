@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { User } from "../utils/types/user";
+import type { User } from "@/utils/types/user";
 
 interface UserState {
     user: User | null;
@@ -36,6 +36,8 @@ export const useUserStore = create<UserState>()(
         {
             name: 'user-storage',
             storage: createJSONStorage(() => localStorage),
+            // the server has no localStorage; Providers rehydrates after mount so the first client render matches the HTML
+            skipHydration: true,
         }
     )
 );

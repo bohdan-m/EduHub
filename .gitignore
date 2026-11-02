@@ -33,3 +33,9 @@ media/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# AI assistant files (skills, settings, context, knowledge graph): kept local only
+.claude/
+CLAUDE.md
+graphify-out/
+skills-lock.json

@@ -1,5 +1,3 @@
-import styles from "./DescriptionAbout.module.css";
-
 type DescriptionAboutProps = {
     header: string;
     description: string;
@@ -7,9 +5,9 @@ type DescriptionAboutProps = {
 
 function DescriptionAbout({ header, description }: DescriptionAboutProps) {
     return (
-        <div className={styles.container}>
-            <h1 className={styles.header}>{header}</h1>
-            <p className={styles.description}>{description}</p>
+        <div className="mt-14">
+            <h2 className="m-0 mb-2 text-[clamp(24px,3vw,30px)] font-semibold">{header}</h2>
+            <p className="m-0 max-w-[70ch] whitespace-pre-line text-muted">{description}</p>
         </div>
     );
 }

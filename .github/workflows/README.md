@@ -10,7 +10,7 @@ This GitHub Actions CI pipeline provides comprehensive testing and validation fo
 - **Purpose**: Runs Django unit tests and integration tests
 - **Services**: PostgreSQL 15 (via GitHub Actions service)
 - **Steps**:
-  - Sets up Python 3.10
+  - Sets up Python 3.12
   - Installs system and Python dependencies
   - Runs database migrations
   - Executes all Django tests
@@ -79,7 +79,7 @@ The pipeline uses the following environment variables (defined at the workflow l
 - `POSTGRES_USER`: postgres
 - `POSTGRES_PASSWORD`: password_default
 - `POSTGRES_DB`: eduhub
-- `PYTHON_VERSION`: 3.10
+- `PYTHON_VERSION`: 3.12
 - `NODE_VERSION`: 22
 
 ## Caching
@@ -111,7 +111,7 @@ python manage.py test
 # Frontend lint
 cd Frontend
 npm run lint
-npx tsc --noEmit --project tsconfig.app.json
+npm run typecheck
 
 # Frontend build
 npm run build

@@ -2,7 +2,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { authApi } from './auth.api';
 import { useUserStore } from '../store/store';
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export const apiClient = axios.create({
   baseURL: `${apiBaseUrl.replace(/\/$/, '')}/api`,
@@ -75,11 +75,17 @@ apiClient.interceptors.response.use(
         return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return apiClient(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
+          .then(
+            (token) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              return apiClient(originalRequest);
+            },
+            // refresh failed and the user was logged out: retry as a guest, like the request that triggered it
+            () => {
+              delete originalRequest.headers.Authorization;
+              return apiClient(originalRequest);
+            }
+          );
       }
 
       originalRequest._retry = true;
@@ -101,8 +107,11 @@ apiClient.interceptors.response.use(
       
         logout();
         processQueue(refreshError, null);
-      
-        return Promise.reject(refreshError);
+
+        // The saved session is dead (expired, or the database was reset). Retry once as a guest so public
+        // endpoints like the course list still load; protected ones 401 again and reject, since user is now null.
+        delete originalRequest.headers.Authorization;
+        return apiClient(originalRequest);
       } finally {
         isRefreshing = false;
       }

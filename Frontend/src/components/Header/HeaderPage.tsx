@@ -1,13 +1,35 @@
+"use client";
+
 import { useState } from "react";
-import { useNavigate } from "react-router";
-import { authApi } from "../../api/auth.api";
-import { useUserStore } from "../../store/store";
-import styles from "./HeaderPage.module.css";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Button, Drawer, buttonVariants } from "@heroui/react";
+import { IconMenu2, IconX } from "@tabler/icons-react";
+import { authApi } from "@/api/auth.api";
+import { useUserStore } from "@/store/store";
+import Brand from "@/components/Brand";
+import ThemeToggle from "@/components/ThemeToggle";
+
+const NAV_LINKS = [
+    { to: "/home", label: "Home" },
+    { to: "/about", label: "About Us" },
+    { to: "/pricing", label: "Pricing" },
+    { to: "/contact", label: "Contact" },
+];
+
+const navClass = (isActive: boolean) =>
+    buttonVariants({
+        variant: isActive ? "secondary" : "ghost",
+        size: "sm",
+        className: isActive ? "text-foreground" : "text-muted hover:text-foreground",
+    });
 
 function HeaderPage() {
     const { user, isAuthenticated, logout } = useUserStore();
-    const navigate = useNavigate();
+    const router = useRouter();
+    const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const closeMenu = () => setIsMobileMenuOpen(false);
 
     const handleLogout = () => {
         const refresh = user?.refresh;
@@ -15,83 +37,75 @@ function HeaderPage() {
             authApi.logout(refresh).catch(() => {});
         }
         logout();
-        setIsMobileMenuOpen(false);
-        navigate("/login");
+        closeMenu();
+        router.push("/login");
     };
 
-    const toggleMobileMenu = () => {
-        setIsMobileMenuOpen(!isMobileMenuOpen);
-    };
+    const authActions = (fullWidth: boolean) => isAuthenticated() ? (
+        <Button variant="ghost" size="sm" fullWidth={fullWidth} onPress={handleLogout}>
+            Log out
+        </Button>
+    ) : (
+        <>
+            <Link className={buttonVariants({ variant: "ghost", size: "sm", fullWidth })} href="/register" onClick={closeMenu}>
+                Sign up
+            </Link>
+            <Link className={buttonVariants({ variant: "primary", size: "sm", fullWidth })} href="/login" onClick={closeMenu}>
+                Log in
+            </Link>
+        </>
+    );
 
     return (
-        <header className={styles.header}>
-            <nav className={styles.nav}>
-                <div className={styles.logoContainer}>
-                    <img
-                        className={styles.logo}
-                        src="src/images/logo.svg"
-                        alt="logo"
-                    />
+        <header className="flex items-center justify-between gap-6 py-4">
+            <nav className="flex items-center gap-8" aria-label="Main">
+                <Brand />
+                <div className="hidden gap-1 md:flex">
+                    {NAV_LINKS.map(({ to, label }) => (
+                        <Link key={to} className={navClass(pathname === to)} href={to} aria-current={pathname === to ? "page" : undefined}>{label}</Link>
+                    ))}
                 </div>
-
-                <div className={styles.buttonsContainer}>
-                    <button className={styles.navButton} onClick={() => navigate('/home')}>Home</button>
-                    <button className={styles.navButton} onClick={() => navigate('/about')}>About Us</button>
-                    <button className={styles.navButton} onClick={() => navigate('/pricing')}>Pricing</button>
-                    <button className={styles.navButton} onClick={() => navigate('/contact')}>Contact</button>
-                </div>
-
-                <button 
-                    className={styles.hamburger} 
-                    onClick={toggleMobileMenu}
-                    aria-label="Toggle menu"
-                >
-                    <span className={styles.hamburgerLine}></span>
-                    <span className={styles.hamburgerLine}></span>
-                    <span className={styles.hamburgerLine}></span>
-                </button>
             </nav>
 
-            <div className={styles.auth}>
-                {isAuthenticated() ? (
-                    <button
-                        className={styles.navButton}
-                        onClick={handleLogout}
-                    >
-                        Logout
-                    </button>
-                ) : (
-                    <>
-                        <button className={styles.navButton} onClick={() => navigate('/register')}>Sign Up</button>
-                        <button className={styles.loginButton} onClick={() => navigate('/login')}>Log In</button>
-                    </>
-                )}
-            </div>
+            <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <div className="hidden items-center gap-2 md:flex">{authActions(false)}</div>
 
-            {isMobileMenuOpen && (
-                <div className={styles.mobileMenu}>
-                    <button className={styles.mobileNavButton} onClick={() => { navigate('/home'); setIsMobileMenuOpen(false); }}>Home</button>
-                    <button className={styles.mobileNavButton} onClick={() => { navigate('/about'); setIsMobileMenuOpen(false); }}>About Us</button>
-                    <button className={styles.mobileNavButton} onClick={() => { navigate('/pricing'); setIsMobileMenuOpen(false); }}>Pricing</button>
-                    <button className={styles.mobileNavButton} onClick={() => { navigate('/contact'); setIsMobileMenuOpen(false); }}>Contact</button>
-                    
-                    <div className={styles.mobileAuth}>
-                        {isAuthenticated() ? (
-                            <button
-                                className={styles.mobileNavButton}
-                                onClick={handleLogout}
-                            >
-                                Logout
-                            </button>
-                        ) : (
-                            <>
-                                <button className={styles.mobileNavButton}>Sign Up</button>
-                                <button className={styles.mobileLoginButton}>Log In</button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
+                <Drawer isOpen={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                    <Drawer.Trigger
+                        className={buttonVariants({ variant: "ghost", isIconOnly: true, className: "md:hidden" })}
+                        aria-label="Menu"
+                    >
+                        <IconMenu2 size={20} aria-hidden />
+                    </Drawer.Trigger>
+                    <Drawer.Backdrop>
+                        <Drawer.Content placement="right">
+                            <Drawer.Dialog aria-label="Menu" className="w-72 max-w-[85vw]">
+                                <Drawer.Header>
+                                    <Drawer.Heading className="text-base font-semibold">Menu</Drawer.Heading>
+                                    <Drawer.CloseTrigger><IconX size={16} /></Drawer.CloseTrigger>
+                                </Drawer.Header>
+                                <Drawer.Body className="flex flex-col gap-1">
+                                    {NAV_LINKS.map(({ to, label }) => (
+                                        <Link
+                                            key={to}
+                                            className={`${navClass(pathname === to)} w-full justify-start`}
+                                            href={to}
+                                            aria-current={pathname === to ? "page" : undefined}
+                                            onClick={closeMenu}
+                                        >
+                                            {label}
+                                        </Link>
+                                    ))}
+                                    <div className="mt-3 flex flex-col gap-2 border-t border-separator pt-4">
+                                        {authActions(true)}
+                                    </div>
+                                </Drawer.Body>
+                            </Drawer.Dialog>
+                        </Drawer.Content>
+                    </Drawer.Backdrop>
+                </Drawer>
+            </div>
         </header>
     );
 }

@@ -23,6 +23,7 @@ class CourseDeleteView(generics.DestroyAPIView):
 
 class CourseDetailView(generics.RetrieveAPIView):
     serializer_class = CourseDetailSerializer
+    permission_classes = [AllowAny]
     lookup_field = 'pk'
 
     def get_queryset(self):
@@ -35,8 +36,8 @@ class CourseListView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = Course.objects.prefetch_related('images', 'stages')
-        
+
         if self.request.user.is_authenticated and self.request.user.role == 'teacher':
             queryset = queryset.filter(author=self.request.user)
-        
+
         return queryset

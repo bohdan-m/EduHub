@@ -9,8 +9,6 @@ RUN addgroup --system appgroup && adduser --system --group appuser
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
-    gcc \
-    python3-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -25,7 +23,8 @@ RUN sed -i 's/\r$//' /entrypoint.sh && \
 
 COPY . .
 
-RUN chown -R appuser:appgroup /app
+RUN mkdir -p /app/static /app/media /tmp/eduhub-test-media && \
+    chown -R appuser:appgroup /app /tmp/eduhub-test-media
 
 USER appuser
 

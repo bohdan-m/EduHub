@@ -16,6 +16,7 @@ class LessonInline(admin.TabularInline):
     model = Lesson
     extra = 1
 
+
 class StageAdmin(admin.ModelAdmin):
     inlines = [LessonInline]
     list_display = ['id', 'title', 'course']

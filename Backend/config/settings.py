@@ -1,5 +1,8 @@
 import os
+import sys
+import tempfile
 from pathlib import Path
+from corsheaders.defaults import default_headers
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,7 +35,21 @@ ALLOWED_HOSTS = [
     h for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",") if h
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin
+]
+
 AUTH_USER_MODEL = "users.User"
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8},
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+]
 
 # Application
 
@@ -116,7 +133,7 @@ REST_FRAMEWORK = {
 _raw_cors = os.getenv("CORS_ALLOWED_ORIGINS", "")
 CORS_ALLOWED_ORIGINS = [o for o in _raw_cors.split(",") if o]
 
-CORS_ALLOW_HEADERS = ["authorization", "content-type"]
+CORS_ALLOW_HEADERS = list(default_headers) + ["authorization"]
 
 # Internationalization
 
@@ -128,10 +145,13 @@ USE_TZ = True
 # Static & Media
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.getenv("STATIC_ROOT", BASE_DIR / "static")
+STATIC_ROOT = os.getenv("STATIC_ROOT", str(BASE_DIR / "static"))
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.getenv("MEDIA_ROOT", BASE_DIR / "media")
+MEDIA_ROOT = os.getenv("MEDIA_ROOT", str(BASE_DIR / "media"))
+
+if 'test' in sys.argv:
+    MEDIA_ROOT = os.path.join(tempfile.gettempdir(), 'eduhub-test-media')
 
 # Security (prod)
 
@@ -140,6 +160,15 @@ if IS_PROD:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+X_FRAME_OPTIONS = "DENY"
 
 # Logging (Cloud Run friendly)
 
@@ -156,6 +185,42 @@ if IS_PROD:
         },
     }
 else:
+    _default_log_dir = BASE_DIR.parent / "logs"
+    _fallback_log_dir = Path(tempfile.gettempdir()) / "eduhub-logs"
+    _log_dir = Path(os.getenv("DJANGO_LOG_DIR", _default_log_dir))
+    _log_file = _log_dir / "django_requests.log"
+    _file_handler_enabled = True
+
+    try:
+        _log_dir.mkdir(parents=True, exist_ok=True)
+        with _log_file.open("a", encoding="utf-8"):
+            pass
+    except OSError:
+        _log_dir = _fallback_log_dir
+        _log_file = _log_dir / "django_requests.log"
+        try:
+            _log_dir.mkdir(parents=True, exist_ok=True)
+            with _log_file.open("a", encoding="utf-8"):
+                pass
+        except OSError:
+            _file_handler_enabled = False
+
+    _handlers = {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    }
+    _root_handlers = ['console']
+
+    if _file_handler_enabled:
+        _handlers['file'] = {
+            'class': 'logging.FileHandler',
+            'filename': str(_log_file),
+            'formatter': 'verbose',
+        }
+        _root_handlers.append('file')
+
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
@@ -165,19 +230,9 @@ else:
                 'style': '{',
             },
         },
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
-                'formatter': 'verbose',
-            },
-            'file': {
-                'class': 'logging.FileHandler',
-                'filename': 'logs/django_requests.log',
-                'formatter': 'verbose',
-            },
-        },
+        'handlers': _handlers,
         'root': {
-            'handlers': ['console', 'file'],
+            'handlers': _root_handlers,
             'level': 'INFO',
         },
     }

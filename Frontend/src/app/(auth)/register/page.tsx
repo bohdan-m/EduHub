@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Form, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { IconCheck, IconChevronDown } from "@tabler/icons-react";
-import axios from "axios";
+import { getApiErrorMessage } from "@/utils/apiError";
 import AuthLayout from "@/components/AuthLayout";
 
 type Role = "student" | "teacher";
@@ -42,19 +42,7 @@ function Register() {
         setUser(responseLogin);
       };
     } catch (err: unknown) {
-      let errorMessage = "Couldn't create the account. Check your details and try again.";
-
-      if (axios.isAxiosError(err)) {
-        const data = err.response?.data;
-        // DRF returns field errors as { field: ["message"] }
-        const fieldError = data && typeof data === "object" ? Object.values(data).flat()[0] : undefined;
-        errorMessage =
-          data?.detail ??
-          data?.message ??
-          (typeof fieldError === "string" ? fieldError : errorMessage);
-      }
-
-      setError(errorMessage);
+      setError(getApiErrorMessage(err, "Couldn't create the account. Check your details and try again."));
     } finally {
       setIsLoading(false);
     }

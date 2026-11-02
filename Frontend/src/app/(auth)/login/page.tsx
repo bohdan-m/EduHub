@@ -6,7 +6,7 @@ import { authApi } from "@/api/auth.api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Form, Input, Label, TextField } from "@heroui/react";
-import axios from "axios";
+import { getApiErrorMessage } from "@/utils/apiError";
 import AuthLayout from "@/components/AuthLayout";
 
 function Login() {
@@ -34,16 +34,7 @@ function Login() {
       setUser(response);
       router.push("/home")
     } catch (err: unknown) {
-      let errorMessage = "Couldn't log in. Check your username and password.";
-
-      if (axios.isAxiosError(err)) {
-        errorMessage =
-          err.response?.data?.detail ??
-          err.response?.data?.message ??
-          errorMessage;
-      }
-
-      setError(errorMessage);
+      setError(getApiErrorMessage(err, "Couldn't log in. Check your username and password."));
     } finally {
       setIsLoading(false);
     }

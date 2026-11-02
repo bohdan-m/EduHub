@@ -1,4 +1,5 @@
-import { Button, Card } from "@heroui/react";
+import Link from "next/link";
+import { Card, buttonVariants } from "@heroui/react";
 import type { CourseListItem } from "@/utils/types/courses";
 
 interface CoursesListItemProps {
@@ -20,10 +21,9 @@ function CoursesListItem({ course }: CoursesListItemProps) {
                         <Card.Description className="m-0 max-w-[70ch] text-[15px] text-muted sm:text-base">{course.description}</Card.Description>
                     )}
                 </div>
-                {/* shortcut: no course detail page exists yet, enable once CourseDetail is built */}
-                <Button variant="outline" isDisabled className="w-full sm:w-auto" aria-label="View course, coming soon">
+                <Link className={buttonVariants({ variant: "outline", className: "w-full sm:w-auto" })} href={`/courses/${course.id}`}>
                     View course
-                </Button>
+                </Link>
             </Card.Header>
 
             <Card.Content className="gap-0">

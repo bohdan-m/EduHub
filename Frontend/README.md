@@ -8,6 +8,7 @@ npm run dev        # http://localhost:5173
 npm run build      # production build (standalone server in .next/standalone)
 npm run lint
 npm run typecheck
+npm run test:unit  # utility tests in tests/ (node:test)
 ```
 
 `NEXT_PUBLIC_API_URL` points at the Django backend (default `http://localhost:8000`, `/api` is appended in code).

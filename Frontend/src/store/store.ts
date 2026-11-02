@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { User } from "@/utils/types/user";
@@ -41,3 +42,10 @@ export const useUserStore = create<UserState>()(
         }
     )
 );
+
+// persist is only attached in the browser (no localStorage on the server), so look it up lazily
+const subscribeHydration = (onDone: () => void) => useUserStore.persist.onFinishHydration(onDone);
+const hasHydratedNow = () => useUserStore.persist.hasHydrated();
+
+// false on the server and the first client render, true once the saved session has been read
+export const useHasHydrated = () => useSyncExternalStore(subscribeHydration, hasHydratedNow, () => false);

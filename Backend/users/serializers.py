@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from users.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth.password_validation import validate_password
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,24 +12,27 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'email': {'required': True},
             'role': {'required': True},
-            'password': {'write_only': True},  
+            'password': {'write_only': True},
         }
 
-    def validate_email(self, value): 
+    def validate_email(self, value):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("User with this email already exists.")
         return value.lower()
 
+    def validate_password(self, value):
+        validate_password(value)
+        return value
+
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
-    
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        user = self.user  
+        user = self.user
 
         data.update({
             "username": user.username,

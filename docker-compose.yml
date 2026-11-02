@@ -55,6 +55,8 @@ services:
       context: ./Frontend
       target: dev
       dockerfile: Dockerfile
+    # next dev writes next-env.d.ts into the mounted folder, so run as the user who owns it (Linux hosts and CI)
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     env_file: .env
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-dev}

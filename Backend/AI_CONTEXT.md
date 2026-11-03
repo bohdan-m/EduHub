@@ -1,7 +1,15 @@
 # Backend context
 
-This is EduHub’s Django 4.2 + Django REST Framework API. Follow the parent [context](../AI_CONTEXT.md) and [workflow](../AGENTS.md). `config/settings.py` uses PostgreSQL and reads the root `.env` in non-production. Django migrations live in `users/migrations/` and `courses/migrations/`; create new migrations rather than editing applied ones.
+This is EduHub's FastAPI API (Python 3.12, SQLAlchemy 2, Alembic, Pydantic 2). Follow the parent [context](../AI_CONTEXT.md) and [workflow](../AGENTS.md).
 
-`config/urls.py` exposes `/api/health/`, registration/login, JWT refresh/logout, and course routes. DRF defaults to JWT authentication and authenticated access; the public course list/detail views explicitly allow anonymous access. `IsTeacher` gates course creation/deletion, while deletion’s queryset restricts a teacher to their own courses. Course nested writes and uploads are in `courses/serializers.py` and are atomic. Local request logs go to `logs/django_requests.log` when writable; production logs use stdout.
+- `app/main.py`: app setup — trusted hosts, CORS, security headers, request logging, 400 handler for validation errors (`{"detail": "field: message", "errors": [...]}`), `/` and `/api/health/`, course routes under `/api`, uploaded media at `/media`. Interactive docs at `/api/docs` outside production.
+- `app/config.py`: settings from env vars (POSTGRES_*, ALLOWED_HOSTS, CORS_ALLOWED_ORIGINS, BETTER_AUTH_URL, BETTER_AUTH_JWKS_URL, MEDIA_ROOT, ENVIRONMENT, ENABLE_POPULATE_DB).
+- `app/auth.py`: verifies Better Auth JWTs (EdDSA only; issuer/audience = `BETTER_AUTH_URL`; keys from `BETTER_AUTH_JWKS_URL`, cached) and mirrors the user into `users` by `auth_id`. Dependencies: `OptionalUser` (guest allowed, bad token = 401), `get_current_user`, `Teacher` (403 for students). There is no login/password code here; Better Auth (Next.js) owns accounts.
+- `app/routers/courses.py`: list (public, limit/offset pagination, newest first; teachers see only their own), detail (public), create (teacher; JSON or multipart with `stages` as JSON and `uploaded_images`), delete (teacher, own courses only, 404 otherwise).
+- `app/schemas.py`: request validation and response shapes; limits must match `Frontend/src/utils/validation.ts`.
+- `app/media.py`: upload validation (Pillow-verified JPEG/PNG/GIF/WebP, ≤5 files, ≤5 MB each), random file names, cleanup on failure/delete.
+- `app/models.py` + `migrations/`: schema. Change models, then `alembic revision --autogenerate`, review, `alembic upgrade head`; never edit applied migrations.
+- `app/seed.py`: demo courses on an empty DB (`python -m app.seed`, dev only, no users).
+- `entrypoint.sh`: migrations, optional seed, then uvicorn (`--reload` in dev, workers in prod).
 
-There is no OpenAPI configuration, cache, task queue, tenant model, payments, or external storage provider. Treat auth, roles, serializers, migrations, settings, and media paths as high-risk.
+Treat auth, roles, schemas, migrations, settings and media paths as high-risk. There is no cache, task queue, tenant model, payments or external storage.

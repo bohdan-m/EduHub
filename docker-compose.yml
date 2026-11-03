@@ -28,12 +28,17 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-eduhub}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-dev-only-change-in-production}
-      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
       ENABLE_POPULATE_DB: ${ENABLE_POPULATE_DB:-false}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      # issuer/audience Better Auth puts in its JWTs, and where to fetch its public keys inside the network
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:5173}
+      BETTER_AUTH_JWKS_URL: http://frontend:5173/api/auth/jwks
       ENVIRONMENT: ${ENVIRONMENT:-dev}
+      # uvicorn --reload: Docker on Windows/macOS doesn't pass file events through bind mounts
+      WATCHFILES_FORCE_POLLING: "true"
+    # writes uploads into the mounted folder, so run as its owner (Linux hosts and CI)
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     volumes:
       - ./Backend:/app
     ports:
@@ -62,6 +67,14 @@ services:
       ENVIRONMENT: ${ENVIRONMENT:-dev}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       WATCHPACK_POLLING: "true"
+      # Better Auth: sessions and users in the shared Postgres (own "auth" schema)
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:5173}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required (openssl rand -base64 32)}
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-eduhub}
+      PGUSER: ${POSTGRES_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./Frontend:/app
       - frontend_node_modules:/app/node_modules
@@ -71,7 +84,10 @@ services:
     ports:
       - "5173:5173"
     depends_on:
-      - web
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
     networks:
       - eduhub-network
 

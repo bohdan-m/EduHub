@@ -21,7 +21,7 @@ node_modules/
 # Frontend build
 dist/
 
-# Django media (user uploads)
+# Uploaded media (user uploads)
 media/
 
 # OS / IDE

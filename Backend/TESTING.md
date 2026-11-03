@@ -1,13 +1,24 @@
 # Backend testing
 
-Use the shared [testing standard](../TESTING.md). Supported reproducible runtime: Python 3.10, requirements in `config/requirements.txt`, and PostgreSQL 15. The host test command needs the configured PostgreSQL service and safe root `.env` values; Compose is the standard local stack.
+Use the shared [testing standard](../TESTING.md). Runtime: Python 3.12, PostgreSQL 15; dependencies pinned in `requirements.txt` (runtime) and `requirements-dev.txt` (tests, lint).
 
 ```bash
-python3.10 -m pip install -r config/requirements.txt
-python manage.py test
-python manage.py test courses.tests.test_views
-python manage.py check
-python manage.py runserver
+pip install -r requirements-dev.txt
+pytest                      # tests/: needs a reachable Postgres (POSTGRES_* env); uses "<POSTGRES_DB>_test"
+pytest tests/test_auth.py   # one file
+flake8
+alembic check               # models and migrations agree (run against a migrated database)
+uvicorn app.main:app --reload
 ```
 
-With Compose, use `docker compose logs --tail=100 web` and exercise `http://localhost:8000/api/health/` plus the relevant `/api/` route. For auth/authorization changes, test anonymous, student, and teacher behavior and ownership denial. For serializer or image work, cover JSON and multipart/error paths as applicable. Do not run `migrate` or `populate_db` just for documentation validation; report if database/runtime prerequisites prevented a check.
+`pytest` creates the `_test` database if needed, applies the Alembic migrations to it, and empties the tables after every test; it refuses to run against a database whose name doesn't end in `_test`. Auth tests sign real EdDSA tokens with a generated key and replace only the JWKS lookup, so signature, expiry, issuer, audience and role checks all run for real.
+
+`e2e/` is a black-box test of the running stack (Better Auth + API + Postgres) over HTTP:
+
+```bash
+E2E_FRONTEND_URL=http://localhost:5173 E2E_API_URL=http://localhost:8000 pytest e2e
+```
+
+It is skipped unless both variables are set and leaves its `@e2e.test` accounts in that stack's database.
+
+With Compose, use `docker compose logs --tail=100 web` and exercise `http://localhost:8000/api/health/` plus the relevant `/api/` route. For auth changes, test guest, student and teacher behavior and ownership denial. For upload work, cover JSON and multipart plus the error paths.

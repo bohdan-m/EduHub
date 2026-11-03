@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { coursesApi } from "@/api/auth.api";
+import { coursesApi } from "@/api/courses.api";
 import type { CourseListItem } from "@/utils/types/courses";
 import CoursesListItem from "@/components/Courses/CoursesListItem";
 import { useInView } from "react-intersection-observer";
 import { Alert, Button, Card, EmptyState, Spinner, buttonVariants } from "@heroui/react";
 import { IconAlertCircle, IconPlus } from "@tabler/icons-react";
 import Link from "next/link";
-import { useUserStore } from "@/store/store";
+import { authClient } from "@/lib/auth-client";
 import DescriptionPage from "@/components/Description/DescriptionPage";
 
 const FIRST_PAGE = "/courses/"
 
 function CoursesList () {
-    const isTeacher = useUserStore((state) => state.user?.role === "teacher")
+    const isTeacher = authClient.useSession().data?.user.role === "teacher"
     const [isLoading, setIsLoading] = useState(true)
     const [isFetchingMore, setIsFetchingMore] = useState(false)
     const [hasError, setHasError] = useState(false)

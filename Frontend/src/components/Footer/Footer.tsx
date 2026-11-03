@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { Separator, buttonVariants } from "@heroui/react";
 import { IconBrandGithub, IconBrandLinkedin, IconBrandUpwork } from "@tabler/icons-react";
-import { useUserStore } from "@/store/store";
+import { authClient } from "@/lib/auth-client";
 
 const LINKEDIN_URL = "https://www.linkedin.com/in/bohdan-matvieiev-061827392/";
 const GITHUB_URL = "https://github.com/bohdan-m";
 const UPWORK_URL = "https://www.upwork.com/freelancers/~019dfaddf625a49656";
 
 function Footer() {
-  const isAuthenticated = useUserStore((state) => state.isAuthenticated());
+  const isAuthenticated = Boolean(authClient.useSession().data);
 
   return (
     <footer className="mt-16 border-t border-separator pt-10 pb-6">

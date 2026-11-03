@@ -15,16 +15,18 @@
     "@heroui/styles": "^3.2.7",
     "@tabler/icons-react": "^3.50.0",
     "axios": "^1.13.2",
+    "better-auth": "^1.7.15",
     "next": "^16.4.4",
+    "pg": "^8.23.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-intersection-observer": "^10.0.0",
-    "tailwindcss": "^4.3.3",
-    "zustand": "^5.0.8"
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.10.0",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "babel-plugin-react-compiler": "^19.1.0-rc.3",

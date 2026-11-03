@@ -1,0 +1,195 @@
+from io import BytesIO
+from pathlib import Path
+
+import pytest
+from PIL import Image
+
+from app.config import get_settings
+
+
+def course_payload(**overrides):
+    payload = {
+        "title": "New Course",
+        "description": "What you will learn.",
+        "stages": [
+            {
+                "title": "Stage 1",
+                "order": 1,
+                "lessons": [
+                    {"title": "Lesson 2", "url": "https://youtu.be/aqz-KE-bpKQ", "order": 2},
+                    {"title": "Lesson 1", "url": "https://www.youtube.com/watch?v=ysz5S6PUM-U", "order": 1},
+                ],
+            },
+            {"title": "Stage 2", "order": 2, "lessons": [{"title": "Reading", "order": 1}]},
+        ],
+    }
+    return {**payload, **overrides}
+
+
+def one_lesson_stage(**lesson):
+    return {"title": "S", "order": 1, "lessons": [{"title": "L", "order": 1, **lesson}]}
+
+
+def png_bytes(size=(4, 4)) -> bytes:
+    buffer = BytesIO()
+    Image.new("RGB", size, "green").save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+def create(client, headers, **overrides):
+    response = client.post("/api/courses/create/", json=course_payload(**overrides), headers=headers)
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def test_create_returns_course_with_author_and_stages(client, auth):
+    course = create(client, auth(sub="tess", name="Tess Teacher"))
+
+    assert course["title"] == "New Course"
+    assert course["author"] == {"id": course["author"]["id"], "name": "Tess Teacher", "role": "teacher"}
+    assert [stage["title"] for stage in course["stages"]] == ["Stage 1", "Stage 2"]
+    assert "email" not in course["author"]
+
+
+def test_titles_are_trimmed(client, auth):
+    course = create(client, auth(), title="  Spaced  ")
+    assert course["title"] == "Spaced"
+
+
+def test_detail_is_public_with_ordered_lessons(client, auth):
+    course_id = create(client, auth())["id"]
+
+    response = client.get(f"/api/courses/{course_id}/")
+    assert response.status_code == 200
+    lessons = response.json()["stages"][0]["lessons"]
+    assert [lesson["title"] for lesson in lessons] == ["Lesson 1", "Lesson 2"]
+
+
+def test_detail_of_missing_course_is_404(client):
+    assert client.get("/api/courses/999/").status_code == 404
+
+
+def test_list_paginates_for_guests_and_shows_teachers_only_their_own(client, auth):
+    for i in range(6):
+        create(client, auth(sub="tess"), title=f"Tess {i}")
+    create(client, auth(sub="other"), title="Other teacher's course")
+
+    first = client.get("/api/courses/").json()
+    assert first["count"] == 7
+    assert len(first["results"]) == 5
+    assert first["results"][0]["title"] == "Other teacher's course"  # newest first
+    assert first["previous"] is None
+    assert first["next"].endswith("/api/courses/?limit=5&offset=5")
+
+    second = client.get("/api/courses/?limit=5&offset=5").json()
+    assert len(second["results"]) == 2
+    assert second["next"] is None
+
+    own = client.get("/api/courses/?limit=50", headers=auth(sub="tess")).json()
+    assert own["count"] == 6
+    assert all(course["title"].startswith("Tess") for course in own["results"])
+
+    as_student = client.get("/api/courses/", headers=auth(role="student", sub="sam")).json()
+    assert as_student["count"] == 7
+
+
+@pytest.mark.parametrize("query", ["limit=0", "limit=51", "offset=-1", "limit=abc"])
+def test_bad_pagination_is_400(client, query):
+    assert client.get(f"/api/courses/?{query}").status_code == 400
+
+
+def test_teacher_deletes_own_course_but_not_others(client, auth):
+    mine = create(client, auth(sub="tess"))["id"]
+    theirs = create(client, auth(sub="other"))["id"]
+
+    assert client.delete(f"/api/courses/{theirs}/delete/", headers=auth(sub="tess")).status_code == 404
+    assert client.delete(f"/api/courses/{mine}/delete/", headers=auth(sub="tess")).status_code == 204
+    assert client.get(f"/api/courses/{mine}/").status_code == 404
+    assert client.get(f"/api/courses/{theirs}/").status_code == 200
+
+
+@pytest.mark.parametrize(
+    "overrides, expected",
+    [
+        ({"title": "   "}, "title: This field may not be blank."),
+        ({"title": "x" * 101}, "title: Must be 100 characters or fewer."),
+        ({"description": "x" * 5001}, "description: Must be 5000 characters or fewer."),
+        ({"stages": []}, "Add at least one stage."),
+        ({"stages": [{"title": "S", "order": 1, "lessons": []}]}, "Every stage needs at least one lesson."),
+        ({"stages": [one_lesson_stage(url="https://vimeo.com/1")]}, "Use a YouTube link."),
+        ({"stages": [one_lesson_stage(url="javascript:alert(1)")]}, "Use a YouTube link."),
+        ({"stages": [{"title": "A", "order": 1, "lessons": [{"title": "L", "order": 1}]},
+                     {"title": "B", "order": 1, "lessons": [{"title": "L", "order": 1}]}]}, "Stage orders must be unique."),
+        ({"stages": [{"title": "A", "order": 1, "lessons": [{"title": "L", "order": 1}, {"title": "M", "order": 1}]}]},
+         "Lesson orders must be unique."),
+        ({"stages": [{"title": "A", "order": 101, "lessons": [{"title": "L", "order": 1}]}]}, "less than or equal to 100"),
+        ({"title": None}, "title:"),
+    ],
+)
+def test_invalid_course_is_rejected_with_readable_error(client, auth, overrides, expected):
+    response = client.post("/api/courses/create/", json=course_payload(**overrides), headers=auth())
+
+    assert response.status_code == 400
+    assert expected in response.json()["detail"]
+
+
+def test_unsupported_body_is_rejected(client, auth):
+    as_json = {**auth(), "Content-Type": "application/json"}
+    as_text = {**auth(), "Content-Type": "text/plain"}
+    assert client.post("/api/courses/create/", content=b"{not json", headers=as_json).status_code == 400
+    assert client.post("/api/courses/create/", content=b"x", headers=as_text).status_code == 415
+
+
+def multipart(payload, files):
+    import json
+
+    data = {"title": payload["title"], "description": payload["description"], "stages": json.dumps(payload["stages"])}
+    return {"data": data, "files": [("uploaded_images", file) for file in files]}
+
+
+def test_multipart_upload_stores_and_serves_images(client, auth):
+    request = multipart(course_payload(), [("photo.png", png_bytes(), "image/png"), ("evil.html", png_bytes(), "text/html")])
+    response = client.post("/api/courses/create/", headers=auth(), **request)
+
+    assert response.status_code == 201, response.text
+    images = response.json()["images"]
+    assert len(images) == 2
+    for image in images:
+        path = image["image"].split("/media/", 1)[1]
+        # stored under a random name with an extension from the detected format, never the uploaded name
+        assert path.startswith("course_previews/") and path.endswith(".png")
+        served = client.get(f"/media/{path}")
+        assert served.status_code == 200
+        assert served.headers["content-type"] == "image/png"
+
+
+@pytest.mark.parametrize(
+    "files, expected",
+    [
+        ([("notes.png", b"definitely not an image", "image/png")], "isn't a valid image"),
+        ([("big.png", png_bytes() + b"0" * (5 * 1024 * 1024), "image/png")], "over 5 MB"),
+        ([(f"{i}.png", png_bytes(), "image/png") for i in range(6)], "Choose up to 5 images"),
+    ],
+)
+def test_bad_uploads_are_rejected_and_nothing_is_saved(client, auth, files, expected):
+    upload_dir = Path(get_settings().media_root) / "course_previews"
+    before = set(upload_dir.glob("*")) if upload_dir.exists() else set()
+
+    response = client.post("/api/courses/create/", headers=auth(), **multipart(course_payload(), files))
+
+    assert response.status_code == 400
+    assert expected in response.json()["detail"]
+    after = set(upload_dir.glob("*")) if upload_dir.exists() else set()
+    assert after == before
+    assert client.get("/api/courses/").json()["count"] == 0
+
+
+def test_deleting_a_course_removes_its_uploaded_files(client, auth):
+    files = [("a.png", png_bytes(), "image/png")]
+    response = client.post("/api/courses/create/", headers=auth(), **multipart(course_payload(), files))
+    course = response.json()
+    stored = Path(get_settings().media_root) / course["images"][0]["image"].split("/media/", 1)[1]
+    assert stored.exists()
+
+    client.delete(f"/api/courses/{course['id']}/delete/", headers=auth())
+    assert not stored.exists()

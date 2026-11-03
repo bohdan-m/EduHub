@@ -1,87 +1,12 @@
-"use client";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import LoginForm from "@/components/auth/LoginForm";
+import { auth, isGoogleEnabled } from "@/lib/auth";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { useUserStore } from "@/store/store";
-import { authApi } from "@/api/auth.api";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Button, Form, Input, Label, TextField } from "@heroui/react";
-import { getApiErrorMessage } from "@/utils/apiError";
-import AuthLayout from "@/components/AuthLayout";
+export const metadata: Metadata = { title: "Log in · EduHub" };
 
-function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-
-  const { user, setUser } = useUserStore();
-
-  useEffect(() => {
-    if (user) {
-      router.push("/home")
-    }
-  }, [user, router])
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
-
-    try {
-      const response = await authApi.login({ username, password });
-      setUser(response);
-      router.push("/home")
-    } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Couldn't log in. Check your username and password."));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <AuthLayout
-      title="Log in to EduHub"
-      subtitle="Pick up your courses where you left off."
-      switchLink={{ to: "/register", label: "Create account" }}
-      footer={<>New to EduHub? <Link className="font-medium text-link" href="/register">Create an account</Link></>}
-      error={error}
-    >
-      <Form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-        <TextField
-          name="username"
-          value={username}
-          onChange={setUsername}
-          isRequired
-          isDisabled={isLoading}
-          autoComplete="username"
-          fullWidth
-        >
-          <Label>Username</Label>
-          <Input autoCapitalize="none" />
-        </TextField>
-
-        <TextField
-          name="password"
-          type="password"
-          value={password}
-          onChange={setPassword}
-          isRequired
-          isDisabled={isLoading}
-          autoComplete="current-password"
-          fullWidth
-        >
-          <Label>Password</Label>
-          <Input />
-        </TextField>
-
-        <Button type="submit" size="lg" fullWidth isPending={isLoading} className="mt-2">
-          {isLoading ? "Logging in…" : "Log in"}
-        </Button>
-      </Form>
-    </AuthLayout>
-  );
+export default async function LoginPage() {
+  if (await auth.api.getSession({ headers: await headers() })) redirect("/home");
+  return <LoginForm googleEnabled={isGoogleEnabled} />;
 }
-
-export default Login;

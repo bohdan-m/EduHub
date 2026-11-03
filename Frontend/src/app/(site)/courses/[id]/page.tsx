@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Alert, Card, Spinner, buttonVariants } from "@heroui/react";
 import { IconAlertCircle, IconArrowLeft, IconPlayerPlayFilled } from "@tabler/icons-react";
-import { coursesApi } from "@/api/auth.api";
+import { coursesApi } from "@/api/courses.api";
 import type { CourseDetail, LessonItem } from "@/utils/types/courses";
 import { getYoutubeEmbedUrl } from "@/utils/youtube";
 
@@ -85,7 +85,7 @@ export default function CourseDetailPage() {
                     </div>
                     <dl className="m-0 grid grid-cols-3 gap-4 rounded-xl border border-border bg-surface p-4 md:grid-cols-1 md:gap-3 md:p-5">
                         {[
-                            ["Instructor", course.author.username],
+                            ["Instructor", course.author?.name ?? "EduHub"],
                             ["Published", dateFormat.format(new Date(course.created_at))],
                             ["Content", `${course.stages.length} stages · ${lessonCount} lessons`],
                         ].map(([label, value]) => (
@@ -102,7 +102,7 @@ export default function CourseDetailPage() {
                 <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
                     {course.images.map((image, i) => (
                         <li key={image.id}>
-                            {/* plain img: course photos come from the Django media host, which differs per environment */}
+                            {/* plain img: course photos come from the API's media host, which differs per environment */}
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img className="block aspect-[4/3] w-full rounded-lg bg-surface-secondary object-cover" alt={`${course.title}, image ${i + 1}`} src={image.image} />
                         </li>

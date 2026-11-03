@@ -18,4 +18,4 @@ When independent agents are unavailable, perform the same stages sequentially an
 
 ## Change boundaries
 
-Use `Frontend/` for React UI/client work and `Backend/` for Django/API/database work. Cross the boundary only for an explicit contract or product-flow reason. Do not edit `.env`, generated folders, user media, applied migrations, Docker/production security settings, or auth/role checks casually. Avoid printing secrets, tokens, passwords, cookies, and unnecessary PII.
+Use `Frontend/` for React UI/client work and `Backend/` for FastAPI/database work. Cross the boundary only for an explicit contract or product-flow reason. Do not edit `.env`, generated folders, user media, applied migrations, Docker/production security settings, or auth/role checks casually. Avoid printing secrets, tokens, passwords, cookies, and unnecessary PII.

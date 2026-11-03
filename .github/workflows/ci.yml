@@ -51,22 +51,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('Backend/config/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('Backend/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client gcc python3-dev curl
 
       - name: Install Python dependencies
         working-directory: ./Backend
         run: |
           python -m pip install --upgrade pip
-          pip install --no-cache-dir -r config/requirements.txt
+          pip install -r requirements-dev.txt
 
-      - name: Run Django migrations
+      - name: Run backend tests (pytest, applies the Alembic migrations to a fresh test database)
         working-directory: ./Backend
         env:
           POSTGRES_HOST: localhost
@@ -74,28 +69,11 @@ jobs:
           POSTGRES_DB: ${{ env.POSTGRES_DB }}
           POSTGRES_USER: ${{ env.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-          DJANGO_SETTINGS_MODULE: config.settings
-        run: |
-          python manage.py migrate
+        run: pytest -v
 
-      - name: Run Django tests
+      - name: Check backend code style (flake8)
         working-directory: ./Backend
-        env:
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5432
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-          DJANGO_SETTINGS_MODULE: config.settings
-        run: |
-          python manage.py test --verbosity=2
-
-      - name: Check Django code style (flake8)
-        working-directory: ./Backend
-        run: |
-          pip install flake8
-          flake8 . --exclude migrations --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 . --exclude migrations --count --max-complexity=10 --max-line-length=127 --statistics
+        run: flake8 . --count --statistics
 
   frontend-lint:
     name: Frontend Lint & Type Check
@@ -149,6 +127,8 @@ jobs:
 
       - name: Build frontend
         working-directory: ./Frontend
+        env:
+          BETTER_AUTH_SECRET: build-time-placeholder
         run: npm run build
 
       - name: Upload build artifacts
@@ -183,7 +163,7 @@ jobs:
       - name: Test backend Docker image
         run: |
           docker run --rm --entrypoint python eduhub-backend:test --version
-          docker run --rm --entrypoint pip eduhub-backend:test list | grep -i django
+          docker run --rm --entrypoint pip eduhub-backend:test list | grep -i fastapi
 
   docker-frontend-build:
     name: Docker Frontend Build
@@ -229,9 +209,10 @@ jobs:
           echo "POSTGRES_USER=${{ env.POSTGRES_USER }}" > .env
           echo "POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }}" >> .env
           echo "POSTGRES_DB=${{ env.POSTGRES_DB }}" >> .env
-          echo "DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,web" >> .env
+          echo "ALLOWED_HOSTS=localhost,127.0.0.1,web" >> .env
           echo "CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173" >> .env
           echo "HOST_UID=$(id -u)" >> .env
+          echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" >> .env
           echo "HOST_GID=$(id -g)" >> .env
 
       - name: Build Docker Compose services
@@ -263,10 +244,24 @@ jobs:
           echo "Testing backend endpoints..."
           docker compose exec -T web curl -fsS http://localhost:8000/api/health/
           docker compose exec -T web curl -fsS http://localhost:8000/api/courses/
-          echo "Running Django system check..."
-          docker compose exec -T web python manage.py check
+          echo "Checking the database is at the latest migration..."
+          docker compose exec -T web alembic check
           echo "Verifying frontend is running..."
           curl -fsS http://localhost:5173/
+
+      - name: Set up Python for the end-to-end test
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: End-to-end test (Better Auth sign-up/login, API tokens, courses, uploads)
+        working-directory: ./Backend
+        env:
+          E2E_FRONTEND_URL: http://localhost:5173
+          E2E_API_URL: http://localhost:8000
+        run: |
+          pip install -r requirements-dev.txt
+          pytest e2e -v
 
       - name: Stop services
         if: ${{ always() }}

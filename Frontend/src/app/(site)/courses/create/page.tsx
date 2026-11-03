@@ -3,12 +3,13 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Alert, Button, Card, Form, Input, Label, Spinner, TextArea, TextField, buttonVariants } from "@heroui/react";
+import { Alert, Button, Card, FieldError, Form, Input, Label, Spinner, TextArea, TextField, buttonVariants } from "@heroui/react";
 import { IconAlertCircle, IconPlus, IconTrash } from "@tabler/icons-react";
-import { coursesApi } from "@/api/auth.api";
-import { useHasHydrated, useUserStore } from "@/store/store";
+import { coursesApi } from "@/api/courses.api";
+import { authClient } from "@/lib/auth-client";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { buildCourseCreatePayload, type CourseComposerLesson, type CourseComposerStage, type CourseComposerValues } from "@/utils/courseForm";
+import { LIMITS, validateImages, validateText, validateYoutubeUrl } from "@/utils/validation";
 
 // crypto.randomUUID needs a secure context; plain http on a LAN IP doesn't have one
 const createId = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -17,26 +18,14 @@ const emptyStage = (): CourseComposerStage => ({ id: createId(), title: "", less
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-// required fields are checked by the inputs themselves; this catches whitespace-only values
-function validate(values: CourseComposerValues) {
-    if (!values.title.trim()) return "Give the course a title.";
-    if (!values.description.trim()) return "Add a short description.";
-    if (values.stages.length === 0) return "Add at least one stage.";
-    for (const stage of values.stages) {
-        if (!stage.title.trim()) return "Every stage needs a title.";
-        if (stage.lessons.length === 0) return "Every stage needs at least one lesson.";
-        if (stage.lessons.some((lesson) => !lesson.title.trim())) return "Every lesson needs a title.";
-    }
-    return null;
-}
-
 export default function CourseCreatePage() {
     const router = useRouter();
-    const hasHydrated = useHasHydrated();
-    const isTeacher = useUserStore((state) => state.user?.role === "teacher");
+    const { data: session, isPending: isSessionPending } = authClient.useSession();
+    const isTeacher = session?.user.role === "teacher";
 
     const [values, setValues] = useState<CourseComposerValues>({ title: "", description: "", stages: [emptyStage()] });
     const [images, setImages] = useState<File[]>([]);
+    const [imageError, setImageError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -51,11 +40,8 @@ export default function CourseCreatePage() {
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const validationError = validate(values);
-        if (validationError) {
-            setError(validationError);
-            return;
-        }
+        // every text field validates itself (the form won't submit while one is invalid); files are checked on change
+        if (imageError) return;
 
         setError(null);
         setIsSubmitting(true);
@@ -68,7 +54,7 @@ export default function CourseCreatePage() {
         }
     };
 
-    if (!hasHydrated) {
+    if (isSessionPending) {
         return (
             <div className="mt-10 flex items-center justify-center gap-3 py-12 text-muted" role="status">
                 <Spinner size="sm" />
@@ -105,23 +91,27 @@ export default function CourseCreatePage() {
                         name="title"
                         value={values.title}
                         onChange={(title) => setValues((current) => ({ ...current, title }))}
+                        validate={(value) => validateText(value, "Course title", LIMITS.courseTitle)}
                         isRequired
                         isDisabled={isSubmitting}
                         fullWidth
                     >
                         <Label>Title</Label>
                         <Input placeholder="Product Design Foundations" />
+                        <FieldError />
                     </TextField>
                     <TextField
                         name="description"
                         value={values.description}
                         onChange={(description) => setValues((current) => ({ ...current, description }))}
+                        validate={(value) => validateText(value, "Description", LIMITS.courseDescription)}
                         isRequired
                         isDisabled={isSubmitting}
                         fullWidth
                     >
                         <Label>Description</Label>
                         <TextArea rows={4} placeholder="What learners will be able to do, and who the course is for." />
+                        <FieldError />
                     </TextField>
                     <div className="flex flex-col gap-1.5">
                         <label htmlFor="course-images" className="text-sm font-medium">Cover images <span className="font-normal text-muted">(optional)</span></label>
@@ -131,10 +121,18 @@ export default function CourseCreatePage() {
                             accept="image/*"
                             multiple
                             disabled={isSubmitting}
-                            onChange={(event) => setImages(Array.from(event.target.files ?? []))}
+                            aria-invalid={imageError ? true : undefined}
+                            aria-describedby="course-images-hint"
+                            onChange={(event) => {
+                                const files = Array.from(event.target.files ?? []);
+                                setImages(files);
+                                setImageError(validateImages(files));
+                            }}
                             className="block w-full text-sm text-muted file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-default file:px-3 file:py-2 file:text-sm file:font-medium file:text-foreground hover:file:bg-surface-tertiary"
                         />
-                        <p className="m-0 text-sm text-muted">Course cards show up to three.</p>
+                        <p id="course-images-hint" className={`m-0 text-sm ${imageError ? "text-danger" : "text-muted"}`} role={imageError ? "alert" : undefined}>
+                            {imageError ?? `Up to ${LIMITS.images} images, 5 MB each. Course cards show the first three.`}
+                        </p>
                     </div>
                 </Card>
 
@@ -156,12 +154,14 @@ export default function CourseCreatePage() {
                                             className="min-w-0 flex-1"
                                             value={stage.title}
                                             onChange={(title) => updateStage(stage.id, (s) => ({ ...s, title }))}
+                                            validate={(value) => validateText(value, "Stage title", LIMITS.stageTitle)}
                                             isRequired
                                             isDisabled={isSubmitting}
                                             fullWidth
                                         >
                                             <Label>Stage title</Label>
                                             <Input placeholder="Research and framing" />
+                        <FieldError />
                                         </TextField>
                                         {values.stages.length > 1 && (
                                             <Button
@@ -183,12 +183,14 @@ export default function CourseCreatePage() {
                                                     className="min-w-0 flex-1"
                                                     value={lesson.title}
                                                     onChange={(title) => updateLesson(stage.id, lesson.id, { title })}
+                                                    validate={(value) => validateText(value, "Lesson title", LIMITS.lessonTitle)}
                                                     isRequired
                                                     isDisabled={isSubmitting}
                                                     fullWidth
                                                 >
                                                     <Label>Lesson {lessonIndex + 1}</Label>
                                                     <Input placeholder="User interviews in practice" />
+                                                    <FieldError />
                                                 </TextField>
                                                 <div className="flex min-w-0 flex-1 items-end gap-2">
                                                     <TextField
@@ -196,11 +198,13 @@ export default function CourseCreatePage() {
                                                         type="url"
                                                         value={lesson.url}
                                                         onChange={(url) => updateLesson(stage.id, lesson.id, { url })}
+                                                        validate={validateYoutubeUrl}
                                                         isDisabled={isSubmitting}
                                                         fullWidth
                                                     >
                                                         <Label>YouTube link</Label>
                                                         <Input placeholder="https://www.youtube.com/watch?v=…" />
+                                                        <FieldError />
                                                     </TextField>
                                                     {stage.lessons.length > 1 && (
                                                         <Button

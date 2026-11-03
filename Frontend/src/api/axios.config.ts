@@ -1,122 +1,49 @@
-import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { authApi } from './auth.api';
-import { useUserStore } from '../store/store';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
+import { authClient } from '@/lib/auth-client';
+import { createTokenCache } from '@/utils/tokenCache';
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export const apiClient = axios.create({
   baseURL: `${apiBaseUrl.replace(/\/$/, '')}/api`,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 10000, 
+  timeout: 10000,
 });
 
-apiClient.interceptors.request.use((config) => {
-  if (config.url?.includes('/refresh/')) {
-    return config;
-  }
+// Short-lived JWT for the FastAPI backend. get-session carries it in a `set-auth-jwt` header when signed in,
+// and answers 200 with no session for guests (the /token endpoint would log a 401 on every page load).
+export const apiToken = createTokenCache(async () => {
+  let token: string | null = null;
+  await authClient.getSession({
+    fetchOptions: {
+      onSuccess: (ctx) => {
+        token = ctx.response.headers.get('set-auth-jwt');
+      },
+    },
+  });
+  return token;
+});
 
-  const { user } = useUserStore.getState();
-  if (user?.access) {
-    config.headers.Authorization = `Bearer ${user.access}`;
+apiClient.interceptors.request.use(async (config) => {
+  const token = await apiToken.get();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-
   return config;
 });
 
-interface QueueItem {
-  resolve: (token: string) => void;
-  reject: (error: unknown) => void;
-}
-
-let isRefreshing = false;
-let failedQueue: QueueItem[] = [];
-
-const processQueue = (
-  error: unknown | null = null,
-  token: string | null = null
-) => {
-  failedQueue.forEach((item) => {
-    if (error) {
-      item.reject(error);
-    } else if (token) {
-      item.resolve(token);
-    }
-  });
-
-  failedQueue = [];
-};
-
 apiClient.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-
-    if (!error.response || !originalRequest) {
+  (error) => {
+    const request = error.config as (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined;
+    if (error.response?.status !== 401 || !request || request._retried) {
       return Promise.reject(error);
     }
-
-    const { status } = error.response;
-    const { user, updateTokens, logout } = useUserStore.getState();
-
-    if (originalRequest.url?.includes('/refresh/') && status === 401) {
-      console.log('Refresh token expired, logging out...');
-      logout();
-      return Promise.reject(error);
-    }
-
-    if (status === 401 && user?.refresh) {
-      if (originalRequest._retry) {
-        console.log('Retry failed, logging out...');
-        logout();
-        return Promise.reject(error);
-      }
-
-      if (isRefreshing) {
-        return new Promise<string>((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(
-            (token) => {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-              return apiClient(originalRequest);
-            },
-            // refresh failed and the user was logged out: retry as a guest, like the request that triggered it
-            () => {
-              delete originalRequest.headers.Authorization;
-              return apiClient(originalRequest);
-            }
-          );
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const data = await authApi.refresh({ refresh: user.refresh });
-
-        updateTokens(data.access, data.refresh);
-        processQueue(null, data.access);
-
-        originalRequest.headers.Authorization = `Bearer ${data.access}`;
-        return apiClient(originalRequest);
-
-      } catch (refreshError: unknown) {
-        const axiosError = refreshError as AxiosError;
-      
-        console.log('Refresh failed:', axiosError.response?.status);
-      
-        logout();
-        processQueue(refreshError, null);
-
-        // The saved session is dead (expired, or the database was reset). Retry once as a guest so public
-        // endpoints like the course list still load; protected ones 401 again and reject, since user is now null.
-        delete originalRequest.headers.Authorization;
-        return apiClient(originalRequest);
-      } finally {
-        isRefreshing = false;
-      }
-    }
-
-    return Promise.reject(error);
+    // The token was rejected (expired, keys rotated, session ended): get a fresh one, or none, and retry once.
+    // Public endpoints then still load as a guest; protected ones fail with 401 again.
+    request._retried = true;
+    apiToken.clear();
+    delete request.headers.Authorization;
+    return apiClient(request);
   }
 );

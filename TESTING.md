@@ -1,17 +1,17 @@
 # EduHub testing and evidence standard
 
-Read this with [AGENTS.md](AGENTS.md). Commands below are derived from `Frontend/package.json`, `Backend/config/requirements.txt`, `docker-compose.yml`, and `.github/workflows/ci.yml`; they are not claims that a command has been run in a particular change.
+Read this with [AGENTS.md](AGENTS.md). Commands below are derived from `Frontend/package.json`, `Backend/requirements*.txt`, `docker-compose.yml`, and `.github/workflows/ci.yml`; they are not claims that a command has been run in a particular change.
 
 ## Setup and reachability
 
-Use Node 22, Python 3.10, PostgreSQL 15, and Docker Compose for the reproducible stack. The repository uses npm (`Frontend/package-lock.json`) and pip (`Backend/config/requirements.txt`); do not substitute another package manager.
+Use Node 22, Python 3.12, PostgreSQL 15, and Docker Compose for the reproducible stack. The repository uses npm (`Frontend/package-lock.json`) and pip (`Backend/requirements.txt`, `Backend/requirements-dev.txt`); do not substitute another package manager.
 
 ```bash
 cp .env.example .env                 # edit locally; do not print or commit it
 docker compose up --build
 ```
 
-Compose runs `db` (PostgreSQL 15), `web` (Django, port 8000), and `frontend` (Next.js dev server, port 5173). Django runs migrations at container startup and seeds only when `ENVIRONMENT=dev` and `ENABLE_POPULATE_DB=true`. Check status and logs without exposing environment values:
+Compose runs `db` (PostgreSQL 15), `web` (FastAPI, port 8000), and `frontend` (Next.js dev server, port 5173). The API applies Alembic migrations at container startup and seeds only when `ENVIRONMENT=dev` and `ENABLE_POPULATE_DB=true`. Check status and logs without exposing environment values:
 
 ```bash
 docker compose ps
@@ -22,16 +22,16 @@ curl -fsS http://localhost:8000/api/health/
 curl -fsS http://localhost:5173/
 ```
 
-There is no Swagger/OpenAPI endpoint in the checked-in configuration. Inspect `Backend/config/urls.py` and serializers/views for the contract; make safe API requests with a local test account and never paste bearer tokens, cookies, passwords, or unnecessary PII into output.
+Outside production the API serves OpenAPI docs at `http://localhost:8000/api/docs`; `Backend/app/routers/` and `Backend/app/schemas.py` are the contract; make safe API requests with a local test account and never paste bearer tokens, cookies, passwords, or unnecessary PII into output.
 
 For host-only work, install from lockfiles/requirements only when needed:
 
 ```bash
 (cd Frontend && npm ci)
-(cd Backend && python3.10 -m pip install -r config/requirements.txt)
+(cd Backend && python3.12 -m pip install -r requirements-dev.txt)
 ```
 
-Host Django requires a reachable PostgreSQL and environment values from the root `.env` (settings reads it in non-production). Start only the needed process with `cd Frontend && npm run dev -- --host 0.0.0.0` or `cd Backend && python manage.py runserver`. Do not run migrations, seed commands, installs, or `docker compose down -v` merely to validate documentation; those change state. There is no committed safe test-only auth bypass. Demo credentials are documented in the root README only for an intentionally seeded local dev database and are not production-auth evidence.
+The API on the host needs a reachable PostgreSQL and the POSTGRES_* / BETTER_AUTH_* values exported in the environment. Start only the needed process with `cd Frontend && npm run dev -- --hostname 0.0.0.0` or `cd Backend && uvicorn app.main:app --reload`. Do not run migrations, seed commands, installs, or `docker compose down -v` merely to validate documentation; those change state. There is no auth bypass and no demo account: sign up through the app (Better Auth) for a local test account.
 
 ## Automated checks
 
@@ -40,12 +40,12 @@ Host Django requires a reachable PostgreSQL and environment values from the root
 (cd Frontend && npm run typecheck)
 (cd Frontend && npm run test:unit)
 (cd Frontend && npm run build)
-(cd Backend && python manage.py test)
-(cd Backend && python manage.py test courses.tests.test_views)
+(cd Backend && pytest && flake8)
+(cd Backend && E2E_FRONTEND_URL=http://localhost:5173 E2E_API_URL=http://localhost:8000 pytest e2e)
 docker compose build
 ```
 
-`npm run test:unit` compiles its test files to ignored `Frontend/.tmp-tests/` and runs Node's test runner. Django tests are the backend unit/integration layer and require the configured PostgreSQL service. CI additionally runs migrations, Django tests, frontend lint/type/unit/build checks, Docker image builds, and a Compose health/API smoke test. A green build, lint run, type check, or health endpoint alone is never behavioral verification.
+`npm run test:unit` compiles its test files to ignored `Frontend/.tmp-tests/` and runs Node's test runner. `pytest` is the backend unit/integration layer (real Postgres, its own `_test` database); `pytest e2e` drives the running stack over HTTP. CI runs the backend tests, frontend lint/type/unit/build checks, Docker image builds, and a Compose stack with health checks and the end-to-end test. A green build, lint run, type check, or health endpoint alone is never behavioral verification.
 
 ## What “done” requires
 
@@ -66,7 +66,7 @@ For any calculation or future financial workflow, tests must name the source-of-
 
 No Playwright/Cypress configuration or browser binaries are currently checked in. Do not invent a browser command or claim browser coverage. When adding Playwright, pin it in `Frontend/package.json`, use `npx playwright install` only after stating the browser download need, and add scripts for headless, headed (`--headed`), screenshots/traces/video, and HTML reports. If managed browsers are unavailable, use an installed local browser and report the exact limitation.
 
-Use selectors in this order: accessible role, `data-testid`, associated label, stable visible text, CSS only as a last resort. Runtime automation must collect `console`, `pageerror`, `requestfailed`, and unexpected non-success HTTP responses; retain sanitized screenshots/traces/reports as evidence. Correlate a UI action with the browser network request and `docker compose logs --tail=100 web` (or `Backend/logs/django_requests.log` in local development).
+Use selectors in this order: accessible role, `data-testid`, associated label, stable visible text, CSS only as a last resort. Runtime automation must collect `console`, `pageerror`, `requestfailed`, and unexpected non-success HTTP responses; retain sanitized screenshots/traces/reports as evidence. Correlate a UI action with the browser network request and `docker compose logs --tail=100 web` (the API logs each request to stdout).
 
 ## Evidence and blocker report
 

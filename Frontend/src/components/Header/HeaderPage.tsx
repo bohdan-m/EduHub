@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button, Drawer, buttonVariants } from "@heroui/react";
 import { IconMenu2, IconPlus, IconX } from "@tabler/icons-react";
-import { authApi } from "@/api/auth.api";
-import { useUserStore } from "@/store/store";
+import { apiToken } from "@/api/axios.config";
+import { authClient } from "@/lib/auth-client";
 import Brand from "@/components/Brand";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -25,23 +25,22 @@ const navClass = (isActive: boolean) =>
     });
 
 function HeaderPage() {
-    const { user, isAuthenticated, logout } = useUserStore();
+    const { data: session } = authClient.useSession();
+    const user = session?.user;
     const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const closeMenu = () => setIsMobileMenuOpen(false);
 
-    const handleLogout = () => {
-        const refresh = user?.refresh;
-        if (refresh) {
-            authApi.logout(refresh).catch(() => {});
-        }
-        logout();
+    const handleLogout = async () => {
+        await authClient.signOut();
+        apiToken.clear();
         closeMenu();
         router.push("/login");
+        router.refresh();
     };
 
-    const authActions = (fullWidth: boolean) => isAuthenticated() ? (
+    const authActions = (fullWidth: boolean) => user ? (
         <>
             {user?.role === "teacher" && (
                 <Link className={buttonVariants({ variant: "primary", size: "sm", fullWidth })} href="/courses/create" onClick={closeMenu}>

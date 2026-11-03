@@ -7,14 +7,13 @@ This GitHub Actions CI pipeline provides comprehensive testing and validation fo
 ## Pipeline Jobs
 
 ### 1. Backend Tests
-- **Purpose**: Runs Django unit tests and integration tests
+- **Purpose**: Runs the FastAPI test suite (pytest) and flake8
 - **Services**: PostgreSQL 15 (via GitHub Actions service)
 - **Steps**:
   - Sets up Python 3.12
-  - Installs system and Python dependencies
-  - Runs database migrations
-  - Executes all Django tests
-  - Performs code style checks with flake8 (non-blocking)
+  - Installs `Backend/requirements-dev.txt`
+  - Runs pytest, which applies the Alembic migrations to a fresh `eduhub_test` database
+  - Checks code style with flake8
 
 ### 2. Frontend Lint & Type Check
 - **Purpose**: Validates TypeScript code quality and type safety
@@ -53,7 +52,8 @@ This GitHub Actions CI pipeline provides comprehensive testing and validation fo
   - Starts database, backend, and frontend services
   - Waits for services to become healthy
   - Tests backend health endpoint
-  - Verifies Django system checks
+  - Verifies the database is at the latest migration (`alembic check`)
+  - Runs the end-to-end test (`Backend/e2e/`): sign-up/login through Better Auth, API tokens, roles, course upload and delete, logout
   - Cleans up services after testing
 
 ### 7. Security Scan
@@ -91,9 +91,9 @@ The pipeline uses GitHub Actions caching for:
 
 ## Notes
 
-1. **Database Configuration**: CI and Docker Compose set `POSTGRES_DB=eduhub`; Django consumes that environment variable. The `postgres` value in `settings.py` is only the fallback when the variable is absent.
+1. **Database Configuration**: CI and Docker Compose set `POSTGRES_DB=eduhub`; the backend tests use `eduhub_test`, which they create and reset themselves.
 
-2. **populate_db Command**: The docker compose integration test runs the `populate_db` management command. Ensure this command is idempotent or handles errors gracefully.
+2. **Seeding**: `python -m app.seed` only fills an empty database, so restarts are safe.
 
 3. **Secrets**: The pipeline uses default passwords for testing. Never use these in production!
 
@@ -104,9 +104,9 @@ The pipeline uses GitHub Actions caching for:
 To run similar checks locally:
 
 ```bash
-# Backend tests
+# Backend tests (needs a reachable Postgres)
 cd Backend
-python manage.py test
+pytest && flake8
 
 # Frontend lint
 cd Frontend

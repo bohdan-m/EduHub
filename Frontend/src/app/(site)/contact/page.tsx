@@ -3,6 +3,7 @@
 import { Button, Card, FieldError, Form, Input, Label, TextArea, TextField } from "@heroui/react";
 import { IconMail, IconMapPin, IconPhone, type TablerIcon } from "@tabler/icons-react";
 import DescriptionPage from "@/components/Description/DescriptionPage";
+import { validateEmail, validateText } from "@/utils/validation";
 
 // Tinted tile behind each contact detail's icon
 const IconTile = ({ icon: Icon }: { icon: TablerIcon }) => (
@@ -45,19 +46,19 @@ function Contact() {
           </Card.Header>
           <Form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="grid gap-4 sm:grid-cols-2">
-            <TextField name="firstName" autoComplete="given-name" isRequired fullWidth>
+            <TextField name="firstName" autoComplete="given-name" validate={(value) => validateText(value, "First name", 100)} isRequired fullWidth>
               <Label>First Name</Label>
               <Input />
               <FieldError />
             </TextField>
-            <TextField name="lastName" autoComplete="family-name" isRequired fullWidth>
+            <TextField name="lastName" autoComplete="family-name" validate={(value) => validateText(value, "Last name", 100)} isRequired fullWidth>
               <Label>Last Name</Label>
               <Input />
               <FieldError />
             </TextField>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-            <TextField name="email" type="email" autoComplete="email" isRequired fullWidth>
+            <TextField name="email" type="email" autoComplete="email" validate={validateEmail} isRequired fullWidth>
               <Label>Email</Label>
               <Input />
               <FieldError />
@@ -73,7 +74,7 @@ function Contact() {
               <Input />
               <FieldError />
             </TextField>
-            <TextField name="message" isRequired fullWidth>
+            <TextField name="message" validate={(value) => validateText(value, "Message", 2000)} isRequired fullWidth>
               <Label>Message</Label>
               <TextArea rows={5} className="min-h-36" />
               <FieldError />

@@ -31,7 +31,7 @@ function CoursesListItem({ course }: CoursesListItemProps) {
                     <ul className="m-0 mt-4 grid list-none grid-cols-1 gap-3 p-0 sm:mt-6 sm:grid-cols-2 lg:grid-cols-3">
                         {course.images.slice(0, 3).map((image, i) => (
                             <li key={image.id} className={imageVisibility[i]}>
-                                {/* plain img: course photos come from the Django media host, which differs per environment */}
+                                {/* plain img: course photos come from the API's media host, which differs per environment */}
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img className="block aspect-[4/3] w-full rounded-lg bg-surface-secondary object-cover" alt="" src={image.image} loading="lazy" />
                             </li>
@@ -43,7 +43,7 @@ function CoursesListItem({ course }: CoursesListItemProps) {
                     <time className="text-sm text-muted tabular-nums" dateTime={course.created_at}>
                         {dateFormat.format(new Date(course.created_at))}
                     </time>
-                    <p className="m-0 min-w-0 text-[15px] font-medium text-muted">By {course.author.username}</p>
+                    <p className="m-0 min-w-0 text-[15px] font-medium text-muted">By {course.author?.name ?? "EduHub"}</p>
                 </div>
 
                 {course.stages.length > 0 && (

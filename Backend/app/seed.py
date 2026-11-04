@@ -1,5 +1,6 @@
 """Seeds the demo courses on an empty database (no user accounts). Run: python -m app.seed"""
 import logging
+import uuid
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -150,6 +151,10 @@ def get_course_data():
     }
 
 
+def video_block(url: str) -> dict:
+    return {"type": "video", "id": uuid.uuid4().hex, "url": url, "caption": ""}
+
+
 def seed(db: Session) -> int:
     """Create the demo courses unless any course exists. Returns how many were created."""
     if db.scalar(select(Course.id).limit(1)) is not None:
@@ -167,7 +172,10 @@ def seed(db: Session) -> int:
                     Stage(
                         title=stage["title"],
                         order=stage["order"],
-                        lessons=[Lesson(title=title, url=url, order=i) for i, (title, url) in enumerate(stage["lessons"], 1)],
+                        lessons=[
+                            Lesson(title=title, order=i, blocks=[video_block(url)])
+                            for i, (title, url) in enumerate(stage["lessons"], 1)
+                        ],
                     )
                     for stage in info["stages"]
                 ],

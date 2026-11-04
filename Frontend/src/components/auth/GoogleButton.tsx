@@ -5,7 +5,7 @@ import { Button } from "@heroui/react";
 import { IconBrandGoogle } from "@tabler/icons-react";
 import { authClient } from "@/lib/auth-client";
 
-// Redirects to Google and back; new Google accounts join as students
+// Redirects to Google and back; Google addresses count as verified
 function GoogleButton({ isDisabled }: { isDisabled?: boolean }) {
   const [isRedirecting, setIsRedirecting] = useState(false);
 

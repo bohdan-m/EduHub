@@ -64,7 +64,9 @@ def database():
 def clean_tables():
     yield
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE users, courses, course_images, stages, lessons RESTART IDENTITY CASCADE"))
+        conn.execute(text(
+            "TRUNCATE users, courses, course_images, stages, lessons, course_drafts, rate_limits RESTART IDENTITY CASCADE"
+        ))
 
 
 @pytest.fixture
@@ -103,15 +105,14 @@ def signing_key(monkeypatch):
 
 @pytest.fixture
 def make_token(signing_key):
-    """make_token(role="teacher", sub="u1", **claim_overrides); pass a claim as None to leave it out."""
+    """make_token(sub="u1", **claim_overrides); pass a claim as None to leave it out."""
 
-    def _make(role="teacher", sub="ba-user-1", key=None, **overrides):
+    def _make(sub="ba-user-1", key=None, **overrides):
         now = int(time.time())
         claims = {
             "sub": sub,
             "email": f"{sub}@example.test",
             "name": f"User {sub}",
-            "role": role,
             "iss": ISSUER,
             "aud": ISSUER,
             "iat": now,
@@ -126,5 +127,5 @@ def make_token(signing_key):
 
 @pytest.fixture
 def auth(make_token):
-    """auth(role=..., sub=...) -> headers for an authenticated request."""
-    return lambda role="teacher", sub="ba-user-1", **claims: {"Authorization": f"Bearer {make_token(role, sub, **claims)}"}
+    """auth(sub=...) -> headers for an authenticated request."""
+    return lambda sub="ba-user-1", **claims: {"Authorization": f"Bearer {make_token(sub, **claims)}"}

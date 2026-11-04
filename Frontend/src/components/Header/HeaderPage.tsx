@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button, Drawer, buttonVariants } from "@heroui/react";
-import { IconMenu2, IconPlus, IconX } from "@tabler/icons-react";
+import { IconMenu2, IconPlus, IconSettings, IconX } from "@tabler/icons-react";
 import { apiToken } from "@/api/axios.config";
 import { authClient } from "@/lib/auth-client";
 import Brand from "@/components/Brand";
@@ -42,12 +42,14 @@ function HeaderPage() {
 
     const authActions = (fullWidth: boolean) => user ? (
         <>
-            {user?.role === "teacher" && (
-                <Link className={buttonVariants({ variant: "primary", size: "sm", fullWidth })} href="/courses/create" onClick={closeMenu}>
-                    <IconPlus size={16} aria-hidden />
-                    Create course
-                </Link>
-            )}
+            <Link className={buttonVariants({ variant: "primary", size: "sm", fullWidth })} href="/courses/create" onClick={closeMenu}>
+                <IconPlus size={16} aria-hidden />
+                Create course
+            </Link>
+            <Link className={buttonVariants({ variant: "ghost", size: "sm", fullWidth })} href="/settings" onClick={closeMenu} aria-current={pathname === "/settings" ? "page" : undefined}>
+                <IconSettings size={16} aria-hidden />
+                Settings
+            </Link>
             <Button variant="ghost" size="sm" fullWidth={fullWidth} onPress={handleLogout}>
                 Log out
             </Button>

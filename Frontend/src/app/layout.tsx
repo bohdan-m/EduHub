@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Providers from "./providers";
 import "./globals.css";
 
@@ -19,12 +20,14 @@ const themeScript = `(function () {
   document.head.appendChild(meta);
 })();`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // src/proxy.ts makes a nonce per request; inline scripts without it are blocked by the page's policy
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     // the theme script changes <html>'s class before React hydrates
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
         <Providers>

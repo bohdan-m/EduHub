@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.db import get_db
-from app.models import ROLES, User
+from app.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -42,14 +42,9 @@ def decode_token(token: str) -> dict:
 
 def sync_user(db: Session, claims: dict) -> User:
     """Return the local user for verified token claims, creating or updating the mirror."""
-    role = claims.get("role")
-    if role not in ROLES:
-        raise _unauthorized("Token has no valid role.")
-
     fields = {
         "email": (claims.get("email") or "")[:254],
         "name": (claims.get("name") or "")[:150],
-        "role": role,
     }
     user = db.scalar(select(User).where(User.auth_id == claims["sub"]))
     if user is None:
@@ -97,11 +92,5 @@ def get_current_user(user: Annotated[User | None, Depends(get_optional_user)]) -
     return user
 
 
-def require_teacher(user: Annotated[User, Depends(get_current_user)]) -> User:
-    if user.role != "teacher":
-        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Only teachers can do this.")
-    return user
-
-
 OptionalUser = Annotated[User | None, Depends(get_optional_user)]
-Teacher = Annotated[User, Depends(require_teacher)]
+CurrentUser = Annotated[User, Depends(get_current_user)]

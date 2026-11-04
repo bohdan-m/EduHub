@@ -5,16 +5,17 @@ import { coursesApi } from "@/api/courses.api";
 import type { CourseListItem } from "@/utils/types/courses";
 import CoursesListItem from "@/components/Courses/CoursesListItem";
 import { useInView } from "react-intersection-observer";
-import { Alert, Button, Card, EmptyState, Spinner, buttonVariants } from "@heroui/react";
+import { Alert, Button, Card, EmptyState, Spinner, Tabs, buttonVariants } from "@heroui/react";
 import { IconAlertCircle, IconPlus } from "@tabler/icons-react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import DescriptionPage from "@/components/Description/DescriptionPage";
 
-const FIRST_PAGE = "/courses/"
+const ALL_COURSES = "/courses/"
+const MY_COURSES = "/courses/?mine=true"
 
-function CoursesList () {
-    const isTeacher = authClient.useSession().data?.user.role === "teacher"
+// One scrolling list for one first page; CoursesList remounts it (key) when the scope changes, so pages never mix
+function CoursesFeed ({ firstPage }: { firstPage: string }) {
     const [isLoading, setIsLoading] = useState(true)
     const [isFetchingMore, setIsFetchingMore] = useState(false)
     const [hasError, setHasError] = useState(false)
@@ -26,11 +27,11 @@ function CoursesList () {
     const nextPath = next ? next.slice(next.indexOf('/courses/')) : null
 
     // flags are set by the callers, so this only touches state after the request settles
-    const fetchCourses = (url: string = FIRST_PAGE) =>
+    const fetchCourses = (url: string = firstPage) =>
         coursesApi.courses(url)
             .then(data => {
                 setNext(data.next)
-                setCourses(prev => url === FIRST_PAGE ? data.results : [...prev, ...data.results])
+                setCourses(prev => url === firstPage ? data.results : [...prev, ...data.results])
             })
             .catch(error => {
                 console.error(error)
@@ -41,8 +42,10 @@ function CoursesList () {
                 setIsFetchingMore(false)
             })
 
+    // once per mount: CoursesList remounts this feed (key) whenever the first page changes
     useEffect(() => {
         fetchCourses()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const loadMore = () => {
@@ -106,27 +109,45 @@ function CoursesList () {
         content = (
             <EmptyState className="mt-10 flex flex-col items-center gap-1 rounded-2xl border border-dashed border-border-tertiary px-6 py-12 text-center text-base">
                 <p className="m-0 text-lg font-semibold text-foreground">No courses yet</p>
-                <p className="m-0 text-muted">New courses from teachers will appear here.</p>
+                <p className="m-0 text-muted">{firstPage === MY_COURSES ? "Courses you create will appear here." : "New courses will appear here."}</p>
             </EmptyState>
         )
     }
 
+    return content
+}
+
+function CoursesList () {
+    const isSignedIn = Boolean(authClient.useSession().data)
+    const [scope, setScope] = useState<"all" | "mine">("all")
+    const showMine = isSignedIn && scope === "mine"
+
     return (
         <div>
             <DescriptionPage header="Online Courses from Qualified Teachers" description="Welcome to our online courses page, where you can improve your skills in any field. Choose one of our courses, designed to provide you with comprehensive knowledge and practical experience from qualified instructors. Explore the courses below and find the one that is perfect for your learning needs." />
-            {isTeacher && (
-                <Card className="mt-10 flex-col items-start gap-4 bg-accent-soft p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-                    <div>
-                        <h2 className="m-0 text-lg font-semibold text-accent-soft-foreground">Publish a new course</h2>
-                        <p className="m-0 mt-1 max-w-[60ch] text-muted">Build a curriculum of staged lessons, with optional cover images, in the same format students browse.</p>
-                    </div>
-                    <Link className={buttonVariants({ variant: "primary", className: "w-full sm:w-auto" })} href="/courses/create">
-                        <IconPlus size={18} aria-hidden />
-                        Create course
-                    </Link>
-                </Card>
+            {isSignedIn && (
+                <>
+                    <Card className="mt-10 flex-col items-start gap-4 bg-accent-soft p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                        <div>
+                            <h2 className="m-0 text-lg font-semibold text-accent-soft-foreground">Create a new course</h2>
+                            <p className="m-0 mt-1 max-w-[60ch] text-muted">Build a curriculum of staged lessons, with optional cover images, in the same format as the courses below.</p>
+                        </div>
+                        <Link className={buttonVariants({ variant: "primary", className: "w-full sm:w-auto" })} href="/courses/create">
+                            <IconPlus size={18} aria-hidden />
+                            Create course
+                        </Link>
+                    </Card>
+                    <Tabs className="mt-10" selectedKey={scope} onSelectionChange={(key) => setScope(key === "mine" ? "mine" : "all")}>
+                        <Tabs.ListContainer>
+                            <Tabs.List aria-label="Which courses">
+                                <Tabs.Tab id="all">All courses<Tabs.Indicator /></Tabs.Tab>
+                                <Tabs.Tab id="mine">My courses<Tabs.Indicator /></Tabs.Tab>
+                            </Tabs.List>
+                        </Tabs.ListContainer>
+                    </Tabs>
+                </>
             )}
-            {content}
+            <CoursesFeed key={showMine ? "mine" : "all"} firstPage={showMine ? MY_COURSES : ALL_COURSES} />
         </div>
     )
 };

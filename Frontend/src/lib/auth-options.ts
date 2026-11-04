@@ -1,11 +1,10 @@
 import type { BetterAuthOptions } from "better-auth";
 import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
-import { jwt } from "better-auth/plugins";
+import { jwt, twoFactor } from "better-auth/plugins";
 import { Pool } from "pg";
+import { sendEmail } from "@/lib/mailer";
 import { validateName } from "@/utils/validation";
-
-export const ROLES = ["student", "teacher"] as const;
 
 // Better Auth checks email format and password length itself; names are free text, so trim and cap them here
 function cleanName(name: unknown) {
@@ -14,7 +13,6 @@ function cleanName(name: unknown) {
     if (error) throw new APIError("BAD_REQUEST", { message: error });
     return value.trim();
 }
-export type Role = (typeof ROLES)[number];
 
 // Public URL of this app: Better Auth's base URL and the issuer/audience the API checks in every JWT
 const baseURL = (process.env.BETTER_AUTH_URL ?? "http://localhost:5173").replace(/\/$/, "");
@@ -29,39 +27,51 @@ export const authPool = new Pool({ options: "-c search_path=auth" });
 // Kept apart from the instance so the startup migration can use it without creating Better Auth,
 // whose schema check would otherwise run (and complain) before the tables exist on a fresh database
 export const authOptions = {
+    appName: "EduHub",
     baseURL,
     database: authPool,
     emailAndPassword: {
         enabled: true,
         minPasswordLength: 8,
         maxPasswordLength: 128,
+        // no session until the address is confirmed; Google addresses arrive already verified
+        requireEmailVerification: true,
+        resetPasswordTokenExpiresIn: 60 * 60,
+        revokeSessionsOnPasswordReset: true, // a reset signs out every device, in case someone else was in
+        sendResetPassword: async ({ user, url }) => {
+            void sendEmail({
+                to: user.email,
+                subject: "Reset your EduHub password",
+                text: `Hi ${user.name}, open this link within an hour to choose a new password. If you didn't ask for this, ignore this email; your password stays the same.`,
+                link: url,
+            }).catch((error) => console.error("Could not send the password reset email:", error));
+        },
+    },
+    emailVerification: {
+        sendOnSignUp: true,
+        sendOnSignIn: true, // a sign-in attempt on an unverified account sends a fresh link
+        autoSignInAfterVerification: true,
+        expiresIn: 60 * 60,
+        sendVerificationEmail: async ({ user, url }) => {
+            // not awaited, so response time doesn't reveal whether the address has an account
+            void sendEmail({
+                to: user.email,
+                subject: "Confirm your EduHub email",
+                text: `Hi ${user.name}, open this link within an hour to confirm your email address and sign in.`,
+                link: url,
+            }).catch((error) => console.error("Could not send the verification email:", error));
+        },
     },
     socialProviders: isGoogleEnabled
         ? { google: { clientId: googleClientId!, clientSecret: googleClientSecret! } }
         : {},
-    user: {
-        additionalFields: {
-            // chosen once at sign-up (Google sign-ups become students); the update hook below locks it
-            role: { type: [...ROLES], required: false, defaultValue: "student", input: true },
-        },
-    },
     databaseHooks: {
         user: {
             create: {
-                before: async (user) => {
-                    const role = user.role ?? "student";
-                    if (!ROLES.includes(role as Role)) {
-                        throw new APIError("BAD_REQUEST", { message: "Role must be student or teacher." });
-                    }
-                    return { data: { ...user, role, name: cleanName(user.name) } };
-                },
+                before: async (user) => ({ data: { ...user, name: cleanName(user.name) } }),
             },
             update: {
-                // input: true would also let /update-user set the role, i.e. a student could make themselves a teacher
                 before: async (data) => {
-                    if (data.role !== undefined) {
-                        throw new APIError("FORBIDDEN", { message: "Role can't be changed." });
-                    }
                     if (data.name !== undefined) {
                         return { data: { ...data, name: cleanName(data.name) } };
                     }
@@ -75,9 +85,11 @@ export const authOptions = {
                 issuer: baseURL,
                 audience: baseURL,
                 expirationTime: "15m",
-                definePayload: ({ user }) => ({ email: user.email, name: user.name, role: user.role }),
+                definePayload: ({ user }) => ({ email: user.email, name: user.name }),
             },
         }),
+        // optional per account (Settings page): authenticator-app codes plus one-time backup codes
+        twoFactor({ issuer: "EduHub" }),
         nextCookies(), // must stay last: lets server actions set the session cookie
     ],
 } satisfies BetterAuthOptions;

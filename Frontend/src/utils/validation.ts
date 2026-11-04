@@ -12,6 +12,17 @@ export const LIMITS = {
     lessonTitle: 100,
     images: 5,
     imageBytes: 5 * 1024 * 1024,
+    blocks: 50,
+    blockText: 20000,
+    linkUrl: 2000,
+    linkTitle: 200,
+    linkDescription: 500,
+    calloutText: 2000,
+    quizQuestion: 500,
+    quizOption: 200,
+    quizOptions: 8,
+    quizExplanation: 1000,
+    videoCaption: 200,
 } as const;
 
 // Deliberately loose (something@something.tld); the server is the final judge of an address
@@ -54,11 +65,36 @@ export function validateYoutubeUrl(value: string): string | null {
     return null;
 }
 
+/** Required, and only http(s): a javascript: link would run in the learner's browser. */
+export function validateWebUrl(value: string): string | null {
+    const url = value.trim();
+    if (!url) return "Add a link.";
+    try {
+        const parsed = new URL(url);
+        if ((parsed.protocol === "http:" || parsed.protocol === "https:") && parsed.hostname && url.length <= LIMITS.linkUrl) return null;
+    } catch {
+        // falls through to the message below
+    }
+    return "Use a full web address starting with https://.";
+}
+
 export function validateImages(files: { name: string; size: number; type: string }[]): string | null {
     if (files.length > LIMITS.images) return `Choose up to ${LIMITS.images} images.`;
     const notImage = files.find((file) => !file.type.startsWith("image/"));
     if (notImage) return `"${notImage.name}" isn't an image.`;
     const tooBig = files.find((file) => file.size > LIMITS.imageBytes);
     if (tooBig) return `"${tooBig.name}" is over 5 MB.`;
+    return null;
+}
+
+export function validateTotpCode(value: string): string | null {
+    const code = value.trim();
+    if (!code) return "Enter the code from your authenticator app.";
+    if (!/^\d{6}$/.test(code)) return "The code is 6 digits.";
+    return null;
+}
+
+export function validateBackupCode(value: string): string | null {
+    if (!value.trim()) return "Enter one of your backup codes.";
     return null;
 }

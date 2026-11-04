@@ -10,7 +10,8 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.config import get_settings
-from app.routers import courses
+from app.limits import BodySizeLimitMiddleware
+from app.routers import courses, drafts
 
 settings = get_settings()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -68,11 +69,12 @@ async def security_headers_and_logging(request: Request, call_next):
 
 
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts_list)
+app.add_middleware(BodySizeLimitMiddleware)
 # added last so it wraps everything, including error responses
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
-    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["authorization", "content-type"],
     max_age=86400,
 )
@@ -85,5 +87,6 @@ def health():
 
 
 app.include_router(courses.router, prefix="/api")
-# course images: the demo set shipped in Backend/media and teacher uploads under media/course_previews
+app.include_router(drafts.router, prefix="/api")
+# course images: the demo set shipped in Backend/media and user uploads under media/course_previews
 app.mount("/media", StaticFiles(directory=settings.media_root, check_dir=False), name="media")

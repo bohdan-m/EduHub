@@ -54,13 +54,13 @@ docker compose build
 | Backend/API | Exercise affected endpoint/service flow; record method, safe request shape, status/response shape, and relevant sanitized service log result. |
 | Frontend | Open the actual route, perform the changed interaction, verify visible result, and inspect console errors, page errors, failed requests, and unexpected HTTP responses. |
 | Full stack | Verify UI action, API method/request/response contract, backend behavior/logs, and final rendered UI result. |
-| Auth/permissions | Test allowed and denied roles/anonymous paths separately; do not equate a test bypass with real JWT evidence. |
+| Auth/permissions | Test the owner, another signed-in account and a guest separately; do not equate a test bypass with real JWT evidence. |
 | Migration/schema | Add and review generated migration, validate upgrade against a disposable/local database, and test affected reads/writes. State if a migration was intentionally not run. |
 | Docker/infrastructure | Validate changed build/config and service reachability; report image/service prerequisites and logs. |
 | Upload/media or document/PDF | Test representative file handling/output, error paths, media/storage configuration, and inspect the rendered artifact visually. No PDF generator exists today. |
 | Queues/webhooks/payments | None exist today. If introduced, document idempotency, retries, signatures, failure handling, and an isolated test flow before calling it done. |
 
-For any calculation or future financial workflow, tests must name the source-of-truth example, explicit inputs/outputs, rounding rule, lifecycle/schedule behavior, and representative plus edge-case regressions. For any multi-tenant capability introduced later, test cross-tenant denial explicitly; EduHub currently has roles but no tenant model.
+For any calculation or future financial workflow, tests must name the source-of-truth example, explicit inputs/outputs, rounding rule, lifecycle/schedule behavior, and representative plus edge-case regressions. For any multi-tenant capability introduced later, test cross-tenant denial explicitly; EduHub currently has per-course ownership but no tenant model.
 
 ## Browser runtime verification
 

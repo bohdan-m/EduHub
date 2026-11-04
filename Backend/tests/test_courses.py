@@ -7,6 +7,10 @@ from PIL import Image
 from app.config import get_settings
 
 
+def video(url):
+    return {"type": "video", "url": url}
+
+
 def course_payload(**overrides):
     payload = {
         "title": "New Course",
@@ -16,8 +20,8 @@ def course_payload(**overrides):
                 "title": "Stage 1",
                 "order": 1,
                 "lessons": [
-                    {"title": "Lesson 2", "url": "https://youtu.be/aqz-KE-bpKQ", "order": 2},
-                    {"title": "Lesson 1", "url": "https://www.youtube.com/watch?v=ysz5S6PUM-U", "order": 1},
+                    {"title": "Lesson 2", "order": 2, "blocks": [video("https://youtu.be/aqz-KE-bpKQ")]},
+                    {"title": "Lesson 1", "order": 1, "blocks": [video("https://www.youtube.com/watch?v=ysz5S6PUM-U")]},
                 ],
             },
             {"title": "Stage 2", "order": 2, "lessons": [{"title": "Reading", "order": 1}]},
@@ -26,8 +30,8 @@ def course_payload(**overrides):
     return {**payload, **overrides}
 
 
-def one_lesson_stage(**lesson):
-    return {"title": "S", "order": 1, "lessons": [{"title": "L", "order": 1, **lesson}]}
+def one_lesson_stage(*blocks):
+    return {"title": "S", "order": 1, "lessons": [{"title": "L", "order": 1, "blocks": list(blocks)}]}
 
 
 def png_bytes(size=(4, 4)) -> bytes:
@@ -43,10 +47,10 @@ def create(client, headers, **overrides):
 
 
 def test_create_returns_course_with_author_and_stages(client, auth):
-    course = create(client, auth(sub="tess", name="Tess Teacher"))
+    course = create(client, auth(sub="tess", name="Tess Author"))
 
     assert course["title"] == "New Course"
-    assert course["author"] == {"id": course["author"]["id"], "name": "Tess Teacher", "role": "teacher"}
+    assert course["author"] == {"id": course["author"]["id"], "name": "Tess Author"}
     assert [stage["title"] for stage in course["stages"]] == ["Stage 1", "Stage 2"]
     assert "email" not in course["author"]
 
@@ -69,15 +73,15 @@ def test_detail_of_missing_course_is_404(client):
     assert client.get("/api/courses/999/").status_code == 404
 
 
-def test_list_paginates_for_guests_and_shows_teachers_only_their_own(client, auth):
+def test_list_paginates_the_whole_catalogue_and_mine_shows_only_own(client, auth):
     for i in range(6):
         create(client, auth(sub="tess"), title=f"Tess {i}")
-    create(client, auth(sub="other"), title="Other teacher's course")
+    create(client, auth(sub="other"), title="Other author's course")
 
     first = client.get("/api/courses/").json()
     assert first["count"] == 7
     assert len(first["results"]) == 5
-    assert first["results"][0]["title"] == "Other teacher's course"  # newest first
+    assert first["results"][0]["title"] == "Other author's course"  # newest first
     assert first["previous"] is None
     assert first["next"].endswith("/api/courses/?limit=5&offset=5")
 
@@ -85,12 +89,13 @@ def test_list_paginates_for_guests_and_shows_teachers_only_their_own(client, aut
     assert len(second["results"]) == 2
     assert second["next"] is None
 
-    own = client.get("/api/courses/?limit=50", headers=auth(sub="tess")).json()
+    signed_in = client.get("/api/courses/", headers=auth(sub="tess")).json()
+    assert signed_in["count"] == 7
+
+    own = client.get("/api/courses/?limit=50&mine=true", headers=auth(sub="tess")).json()
     assert own["count"] == 6
     assert all(course["title"].startswith("Tess") for course in own["results"])
-
-    as_student = client.get("/api/courses/", headers=auth(role="student", sub="sam")).json()
-    assert as_student["count"] == 7
+    assert client.get("/api/courses/?mine=true").status_code == 401
 
 
 @pytest.mark.parametrize("query", ["limit=0", "limit=51", "offset=-1", "limit=abc"])
@@ -98,7 +103,7 @@ def test_bad_pagination_is_400(client, query):
     assert client.get(f"/api/courses/?{query}").status_code == 400
 
 
-def test_teacher_deletes_own_course_but_not_others(client, auth):
+def test_author_deletes_own_course_but_not_others(client, auth):
     mine = create(client, auth(sub="tess"))["id"]
     theirs = create(client, auth(sub="other"))["id"]
 
@@ -116,8 +121,8 @@ def test_teacher_deletes_own_course_but_not_others(client, auth):
         ({"description": "x" * 5001}, "description: Must be 5000 characters or fewer."),
         ({"stages": []}, "Add at least one stage."),
         ({"stages": [{"title": "S", "order": 1, "lessons": []}]}, "Every stage needs at least one lesson."),
-        ({"stages": [one_lesson_stage(url="https://vimeo.com/1")]}, "Use a YouTube link."),
-        ({"stages": [one_lesson_stage(url="javascript:alert(1)")]}, "Use a YouTube link."),
+        ({"stages": [one_lesson_stage(video("https://vimeo.com/1"))]}, "Use a YouTube link."),
+        ({"stages": [one_lesson_stage(video("javascript:alert(1)"))]}, "Use a YouTube link."),
         ({"stages": [{"title": "A", "order": 1, "lessons": [{"title": "L", "order": 1}]},
                      {"title": "B", "order": 1, "lessons": [{"title": "L", "order": 1}]}]}, "Stage orders must be unique."),
         ({"stages": [{"title": "A", "order": 1, "lessons": [{"title": "L", "order": 1}, {"title": "M", "order": 1}]}]},

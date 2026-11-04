@@ -53,7 +53,9 @@ This GitHub Actions CI pipeline provides comprehensive testing and validation fo
   - Waits for services to become healthy
   - Tests backend health endpoint
   - Verifies the database is at the latest migration (`alembic check`)
-  - Runs the end-to-end test (`Backend/e2e/`): sign-up/login through Better Auth, API tokens, roles, course upload and delete, logout
+  - Runs the end-to-end test (`Backend/e2e/`): sign-up with email confirmation and password reset (Mailpit), two-factor sign-in, API tokens, course upload and delete, logout
+  - Runs the browser tests (`Frontend/e2e/`, Playwright + Chromium): sign-up, forgot password, building a course in the builder and taking it as a guest; the HTML report is uploaded when they fail
+- **Dependency Audit**: `npm audit --omit=dev --audit-level=high` and `pip-audit` on the shipped dependencies
   - Cleans up services after testing
 
 ### 7. Security Scan

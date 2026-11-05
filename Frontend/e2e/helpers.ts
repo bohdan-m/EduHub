@@ -61,3 +61,21 @@ export async function signUp(page: Page, request: APIRequestContext, name: strin
   await expect(page).toHaveURL(/\/home$/);
   return email;
 }
+
+/** The API token of the account signed in on this page (Better Auth hands it out with the session). */
+export async function apiToken(page: Page) {
+  const response = await page.request.get("/api/auth/get-session");
+  const token = response.headers()["set-auth-jwt"];
+  expect(token, "signed in, so the session comes with an API token").toBeTruthy();
+  return token;
+}
+
+/** Creates a course through the API as the page's account; returns its id. Faster than the builder for setup. */
+export async function createCourseAs(page: Page, course: Record<string, unknown>) {
+  const response = await page.request.post(`${API}/api/courses/create/`, {
+    data: course,
+    headers: { Authorization: `Bearer ${await apiToken(page)}` },
+  });
+  expect(response.status(), await response.text()).toBe(201);
+  return (await response.json()).id as number;
+}

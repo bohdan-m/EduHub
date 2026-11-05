@@ -74,7 +74,13 @@ function Footer() {
           </div>
         </section>
 
-        <p className="text-[13px] text-muted">© {new Date().getFullYear()} EduHub. All rights reserved.</p>
+        <nav aria-label="Footer" className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm">
+          {[["/about", "About"], ["/contact", "Contact"], ["/privacy", "Privacy"], ["/terms", "Terms"]].map(([href, label]) => (
+            <Link key={href} href={href} className="text-muted hover:text-foreground">{label}</Link>
+          ))}
+        </nav>
+
+        <p className="m-0 text-[13px] text-muted">© {new Date().getFullYear()} EduHub</p>
       </div>
     </footer>
   );

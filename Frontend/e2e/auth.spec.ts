@@ -36,8 +36,9 @@ test("an unconfirmed account can't log in, and forgot password sets a new one", 
   await page.goto(await emailedLink(request, email, "/verify-email"));
   await expect(page).toHaveURL(/\/home$/);
   await page.getByRole("button", { name: "Log out" }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: /Learn something new/ })).toBeVisible();
 
+  await page.goto("/login");
   await page.getByRole("link", { name: "Forgot password?" }).click();
   await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
   await page.getByLabel("Email").fill(email);

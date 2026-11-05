@@ -5,19 +5,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Alert, Button, Card, Tabs, buttonVariants } from "@heroui/react";
 import {
-  IconAlertCircle, IconArrowDown, IconArrowUp, IconFileDescription, IconPlus, IconTrash, IconX,
+  IconAlertCircle, IconArrowDown, IconArrowUp, IconCopy, IconFileDescription, IconPlus, IconTrash, IconX,
 } from "@tabler/icons-react";
 import { coursesApi } from "@/api/courses.api";
 import BlockEditor, { BLOCK_TYPES, Field } from "@/components/CourseBuilder/BlockEditor";
 import LessonContent from "@/components/Lesson/LessonContent";
 import { getApiErrorMessage } from "@/utils/apiError";
 import {
-  buildCoursePayload, createBlock, draftFromCourse, emptyDraft, emptyLesson, emptyStage, findProblems,
-  type CourseDraft, type DraftLesson, type DraftStage,
+  buildCoursePayload, createBlock, createId, draftFromCourse, duplicateLesson, emptyDetails, emptyDraft, emptyLesson, emptyStage,
+  findProblems, type CourseDraft, type DraftLesson, type DraftStage,
 } from "@/utils/courseForm";
-import type { Block, BlockType, CourseDetail, CourseImage } from "@/utils/types/courses";
+import { CATEGORIES, LANGUAGES, LEVELS, STATUSES } from "@/utils/courseMeta";
+import type { Block, BlockType, CourseDetail, CourseDetailsInput, CourseImage } from "@/utils/types/courses";
 import { draftsApi } from "@/api/drafts.api";
-import { LIMITS, validateImages, validateText } from "@/utils/validation";
+import { LIMITS, validateImages, validateText, validateVideoUrl } from "@/utils/validation";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -28,6 +29,23 @@ function move<T>(items: T[], index: number, offset: -1 | 1): T[] {
   const next = [...items];
   [next[index], next[target]] = [next[target], next[index]];
   return next;
+}
+
+/** A labelled native select: short fixed lists, fully keyboard and screen-reader friendly. */
+function SelectField<T extends string>({ label, value, options, onChange, hint }: {
+  label: string; value: T; options: Record<T, string>; onChange: (value: T) => void; hint?: string;
+}) {
+  const id = `field-${label.toLowerCase().replace(/\W+/g, "-")}`;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-sm font-medium">{label}</label>
+      <select id={id} value={value} onChange={(event) => onChange(event.target.value as T)}
+        className="h-10 rounded-xl border border-border bg-field px-3 text-sm outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/30">
+        {(Object.entries(options) as [T, string][]).map(([key, text]) => <option key={key} value={key}>{text}</option>)}
+      </select>
+      {hint && <p className="m-0 text-xs text-muted">{hint}</p>}
+    </div>
+  );
 }
 
 type Selection = { kind: "details" } | { kind: "stage"; stageKey: string } | { kind: "lesson"; stageKey: string; lessonKey: string };
@@ -75,7 +93,9 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
     if (window.matchMedia("(max-width: 1023px)").matches) panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [selectionKey]);
 
-  const problems = useMemo(() => findProblems(draft), [draft]);
+  const details = draft.details ?? emptyDetails();
+  const isPublishing = details.status !== "draft";
+  const problems = useMemo(() => findProblems(draft, { publishing: isPublishing }), [draft, isPublishing]);
   const problemTargets = useMemo(() => new Set(problems.map((p) => p.target)), [problems]);
   const hasProblem = (target: string) => showErrors && problemTargets.has(target);
 
@@ -134,6 +154,10 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
     setDraft((d) => ({ ...d, stages: d.stages.map((s) => (s.key === stageKey ? update(s) : s)) }));
   const updateLesson = (stageKey: string, lessonKey: string, update: (lesson: DraftLesson) => DraftLesson) =>
     updateStage(stageKey, (s) => ({ ...s, lessons: s.lessons.map((l) => (l.key === lessonKey ? update(l) : l)) }));
+  const setDetails = (patch: Partial<CourseDetailsInput>) => setDraft((d) => ({ ...d, details: { ...(d.details ?? emptyDetails()), ...patch } }));
+  // lists are edited one item per line; blank lines are dropped on save
+  const lines = (items: string[]) => items.join("\n");
+  const toItems = (text: string) => text.split("\n").slice(0, LIMITS.listItems + 1);
 
   const addStage = () => {
     const stage = emptyStage();
@@ -149,6 +173,14 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
   const removeStage = (stageKey: string) => {
     setDraft((d) => ({ ...d, stages: d.stages.filter((s) => s.key !== stageKey) }));
     setSelection({ kind: "details" });
+  };
+  const copyLesson = (stageKey: string, source: DraftLesson) => {
+    const copy = duplicateLesson(source);
+    updateStage(stageKey, (s) => {
+      const at = s.lessons.findIndex((l) => l.key === source.key);
+      return { ...s, lessons: [...s.lessons.slice(0, at + 1), copy, ...s.lessons.slice(at + 1)] };
+    });
+    setSelection({ kind: "lesson", stageKey, lessonKey: copy.key });
   };
   const removeLesson = (stageKey: string, lessonKey: string) => {
     updateStage(stageKey, (s) => ({ ...s, lessons: s.lessons.filter((l) => l.key !== lessonKey) }));
@@ -203,7 +235,8 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
 
   const outline = (
     <Card className="gap-1 p-2 lg:sticky lg:top-4">
-      <button type="button" className={outlineItem(selection.kind === "details", hasProblem("details"))} onClick={() => setSelection({ kind: "details" })}>
+      <button type="button" className={outlineItem(selection.kind === "details", hasProblem("details"))} onClick={() => setSelection({ kind: "details" })}
+        aria-label="Course details" aria-current={selection.kind === "details" ? "true" : undefined}>
         <IconFileDescription size={16} className="shrink-0" aria-hidden />
         <span className="flex-1">Course details</span>
         {flag("details")}
@@ -213,6 +246,8 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
         {draft.stages.map((s, si) => (
           <li key={s.key}>
             <button type="button" className={outlineItem(selection.kind === "stage" && selection.stageKey === s.key, hasProblem(s.key))}
+              aria-label={`Stage ${si + 1}: ${s.title.trim() || "Untitled stage"}`}
+              aria-current={selection.kind === "stage" && selection.stageKey === s.key ? "true" : undefined}
               onClick={() => setSelection({ kind: "stage", stageKey: s.key })}>
               <span className="w-5 shrink-0 font-semibold text-accent tabular-nums">{pad(si + 1)}</span>
               <span className="min-w-0 flex-1 truncate font-semibold">{s.title.trim() || "Untitled stage"}</span>
@@ -224,6 +259,7 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
                   <button type="button"
                     className={outlineItem(selection.kind === "lesson" && selection.lessonKey === l.key, hasProblem(l.key))}
                     aria-current={selection.kind === "lesson" && selection.lessonKey === l.key ? "true" : undefined}
+                    aria-label={`Lesson ${si + 1}.${li + 1}: ${l.title.trim() || "Untitled lesson"}`}
                     onClick={() => openTarget(l.key)}>
                     <span className="w-7 shrink-0 text-xs text-muted tabular-nums">{si + 1}.{li + 1}</span>
                     <span className="min-w-0 flex-1 truncate">{l.title.trim() || "Untitled lesson"}</span>
@@ -275,6 +311,25 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
         <Field label="Description" rows={4} value={draft.description} onChange={(description) => setDraft((d) => ({ ...d, description }))} isRequired
           maxLength={LIMITS.courseDescription} error={showErrors ? validateText(draft.description, "Description", LIMITS.courseDescription) : null}
           placeholder="What learners will be able to do, and who the course is for." />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <SelectField label="Category" value={details.category} options={CATEGORIES} onChange={(category) => setDetails({ category })} />
+          <SelectField label="Level" value={details.level} options={LEVELS} onChange={(level) => setDetails({ level })} />
+          <SelectField label="Language" value={details.language} options={LANGUAGES} onChange={(language) => setDetails({ language })} />
+        </div>
+        <Field label="What learners will learn (optional)" rows={4} value={lines(details.outcomes)} onChange={(text) => setDetails({ outcomes: toItems(text) })}
+          description={`One per line, up to ${LIMITS.listItems}. Shown at the top of the course page.`}
+          error={showErrors ? problems.find((p) => p.message.startsWith("What learners"))?.message : null}
+          placeholder={"Write SELECT queries with filters\nJoin two tables\nSpot slow queries"} />
+        <Field label="Requirements (optional)" rows={3} value={lines(details.requirements)} onChange={(text) => setDetails({ requirements: toItems(text) })}
+          description="What learners need before starting, one per line."
+          error={showErrors ? problems.find((p) => p.message.startsWith("Requirements"))?.message : null}
+          placeholder={"A laptop\nNo programming experience needed"} />
+        <Field label="Intro video (optional)" type="url" value={details.intro_video_url} onChange={(intro_video_url) => setDetails({ intro_video_url })}
+          description="A short YouTube or Vimeo trailer shown on the course page."
+          error={showErrors ? validateVideoUrl(details.intro_video_url) : null} placeholder="https://www.youtube.com/watch?v=…" />
+        <SelectField label="Visibility" value={details.status} onChange={(status) => setDetails({ status })}
+          options={{ draft: STATUSES.draft.label, unlisted: STATUSES.unlisted.label, published: STATUSES.published.label }}
+          hint={`${STATUSES[details.status].hint}${details.status !== "draft" ? " Every lesson needs some content." : ""}`} />
         <div className="flex flex-col gap-2">
           <p className="m-0 text-sm font-medium">Cover images <span className="font-normal text-muted">(optional, up to {LIMITS.images})</span></p>
           {(keptImages.length > 0 || newImages.length > 0) && (
@@ -361,6 +416,9 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
             <p className="m-0 flex-1 text-sm text-muted">
               {stage.title.trim() || `Stage ${stageIndex + 1}`} · Lesson {stageIndex + 1}.{lessonIndex + 1}
             </p>
+            <Button variant="ghost" size="sm" isIconOnly aria-label={`Duplicate lesson ${lessonIndex + 1}`} onPress={() => copyLesson(stage.key, lesson)}>
+              <IconCopy size={16} aria-hidden />
+            </Button>
             {reorderButtons(`lesson ${lessonIndex + 1}`, lessonIndex, stage.lessons.length,
               (offset) => updateStage(stage.key, (s) => ({ ...s, lessons: move(s.lessons, lessonIndex, offset) })),
               stage.lessons.length > 1 ? () => removeLesson(stage.key, lesson.key) : undefined)}
@@ -386,7 +444,7 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
           <>
             {lesson.blocks.length === 0 && (
               <p className="m-0 rounded-xl border border-dashed border-border-tertiary px-6 py-8 text-center text-sm text-muted">
-                This lesson is empty. Add text, a video, links, callouts or a quiz below.
+                This lesson is empty. Add text, a video, an image, links, files, callouts or a quiz below.
               </p>
             )}
             {lesson.blocks.map((block, bi) => (
@@ -399,12 +457,20 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
                 onChange={(next) => setBlocks((blocks) => blocks.map((b) => (b.id === block.id ? next : b)))}
                 onMove={(offset) => setBlocks((blocks) => move(blocks, bi, offset))}
                 onRemove={() => setBlocks((blocks) => blocks.filter((b) => b.id !== block.id))}
+                onDuplicate={() => setBlocks((blocks) => {
+                  const copy = { ...structuredClone(block), id: createId() } as Block;
+                  if (copy.type === "quiz") {
+                    copy.options = copy.options.map((o) => ({ ...o, id: createId() }));
+                    copy.pairs = copy.pairs.map((p) => ({ ...p, id: createId() }));
+                  }
+                  return [...blocks.slice(0, bi + 1), copy, ...blocks.slice(bi + 1)];
+                })}
               />
             ))}
             {lesson.blocks.length < LIMITS.blocks && (
               <Card className="gap-3 border border-dashed border-border-tertiary bg-transparent p-4 shadow-none">
                 <p className="m-0 text-sm font-medium">Add to this lesson</p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                   {BLOCK_TYPES.map(({ type, label, icon: Icon, hint }) => (
                     <button key={type} type="button" onClick={() => addBlock(type)} aria-label={`Add ${label.toLowerCase()} block`}
                       className="flex flex-col items-start gap-1 rounded-lg border border-border bg-surface p-3 text-left transition-colors hover:border-accent/50 hover:bg-accent-soft">
@@ -456,7 +522,7 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
               <details className="text-sm text-danger">
                 <summary className="cursor-pointer font-medium">
                   <IconAlertCircle size={16} className="mr-1 inline align-[-3px]" aria-hidden />
-                  {plural(problems.length, "thing")} to fix before saving
+                  {plural(problems.length, "thing")} to fix before {isPublishing ? "publishing" : "saving"}
                 </summary>
                 <ul className="m-0 mt-2 max-h-40 list-none overflow-y-auto p-0">
                   {problems.map((p, i) => (
@@ -481,8 +547,13 @@ function CourseBuilder({ course, restored: initialDraft = null }: { course?: Cou
             )}
           </div>
           <div className="flex gap-2">
-            <Link className={buttonVariants({ variant: "ghost" })} href={course ? `/courses/${course.id}` : "/home"}>Cancel</Link>
-            <Button onPress={save} isPending={isSaving}>{isSaving ? "Saving…" : course ? "Save changes" : "Create course"}</Button>
+            <Link className={buttonVariants({ variant: "ghost" })} href={course ? `/courses/${course.id}` : "/teach"}>Cancel</Link>
+            <Button onPress={save} isPending={isSaving}>
+              {isSaving ? "Saving…"
+                : details.status === "draft" ? "Save draft"
+                : course?.status === details.status ? "Save changes"
+                : details.status === "published" ? "Publish course" : "Save as unlisted"}
+            </Button>
           </div>
         </div>
       </div>

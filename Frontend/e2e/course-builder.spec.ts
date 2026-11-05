@@ -10,12 +10,14 @@ test("an author builds a course and a learner takes it", async ({ page, request,
   const outline = page.getByRole("navigation", { name: "Course outline" });
 
   // saving an empty course points at every missing part instead of sending it
-  await page.getByRole("button", { name: "Create course", exact: true }).click();
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
   await expect(page.getByText("things to fix before saving")).toBeVisible();
   await expect(page.getByText("Enter a course title.").first()).toBeVisible();
 
-  await page.getByLabel("Title").fill("Playwright SQL course");
+  await page.getByLabel("Title", { exact: true }).fill("Playwright SQL course");
   await page.getByLabel("Description").fill("Built and taken by the browser tests.");
+  await page.getByLabel("Category").selectOption("data");
+  await page.getByLabel("What learners will learn (optional)").fill("Filter rows with WHERE");
   await outline.getByRole("button", { name: /Untitled stage/ }).click();
   await page.getByLabel("Stage title").fill("Basics");
   await outline.getByRole("button", { name: /Untitled lesson/ }).click();
@@ -49,20 +51,24 @@ test("an author builds a course and a learner takes it", async ({ page, request,
   await logIn(elsewhere, email);
   await elsewhere.goto("/courses/create");
   await expect(elsewhere.getByText("Your unsaved draft is back")).toBeVisible();
-  await expect(elsewhere.getByLabel("Title")).toHaveValue("Playwright SQL course");
+  await expect(elsewhere.getByLabel("Title", { exact: true })).toHaveValue("Playwright SQL course");
   await otherDevice.close();
 
   await page.getByRole("tab", { name: "Preview as learner" }).click();
   await expect(page.getByRole("region", { name: "Quiz" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Create course", exact: true }).click();
+  // new courses are drafts; this one goes straight to the catalogue
+  await outline.getByRole("button", { name: "Course details" }).click();
+  await page.getByLabel("Visibility").selectOption("published");
+  await page.getByRole("button", { name: "Publish course", exact: true }).click();
   await expect(page).toHaveURL(/\/courses\/\d+$/);
   const courseUrl = page.url();
   await expect(page.getByRole("heading", { name: "Playwright SQL course" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Edit course" })).toBeVisible();
+  await expect(page.getByText("Filter rows with WHERE")).toBeVisible();
   await expect(page.locator("article strong")).toHaveText("WHERE keeps matching rows.");
   await page.goto("/courses/create");
-  await expect(page.getByLabel("Title")).toHaveValue("");
+  await expect(page.getByLabel("Title", { exact: true })).toHaveValue("");
   await expect(page.getByText("Your unsaved draft is back")).toHaveCount(0);
   noErrors();
 

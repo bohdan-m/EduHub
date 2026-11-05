@@ -28,7 +28,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-eduhub}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      # "web": the Next.js server calls the API by its service name (course pages, account deletion)
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1},web
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:?INTERNAL_API_SECRET is required (openssl rand -base64 32)}
       ENABLE_POPULATE_DB: ${ENABLE_POPULATE_DB:-false}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       # issuer/audience Better Auth puts in its JWTs, and where to fetch its public keys inside the network
@@ -66,6 +68,9 @@ services:
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-dev}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      # server-side calls go over the compose network
+      API_INTERNAL_URL: http://web:8000
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:?INTERNAL_API_SECRET is required (openssl rand -base64 32)}
       WATCHPACK_POLLING: "true"
       # Better Auth: sessions and users in the shared Postgres (own "auth" schema)
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:5173}

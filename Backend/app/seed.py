@@ -2,10 +2,11 @@
 import logging
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
+from app.content import course_totals
 from app.db import SessionLocal
 from app.models import Course, CourseImage, Lesson, Stage
 
@@ -160,13 +161,22 @@ def seed(db: Session) -> int:
     if db.scalar(select(Course.id).limit(1)) is not None:
         return 0
 
-    courses = get_course_data().values()
-    for info in courses:
+    courses = get_course_data()
+    for key, info in courses.items():
+        lesson_count, minutes = course_totals(
+            [[video_block("")] for stage in info["stages"] for _ in stage["lessons"]]
+        )
         db.add(
             Course(
                 title=info["title"],
                 description=info["description"],
                 author=None,  # shown as "EduHub"
+                status="published",
+                published_at=func.now(),
+                category=key,  # the demo set is keyed by its category
+                level="beginner",
+                lesson_count=lesson_count,
+                estimated_minutes=minutes,
                 images=[CourseImage(image=image) for image in info["images"]],
                 stages=[
                     Stage(

@@ -31,7 +31,7 @@ def test_learners_get_quizzes_without_answers(client, auth):
     for headers in ({}, auth(sub="bob")):
         quiz = client.get(f"/api/courses/{owner_view['id']}/", headers=headers).json()["stages"][0]["lessons"][0]["blocks"][1]
         assert quiz == {
-            "type": "quiz", "id": "q1", "question": "Which are fruits?", "multiple": False,
+            "type": "quiz", "id": "q1", "kind": "choice", "question": "Which are fruits?", "multiple": False,
             "options": [{"id": "a", "text": "Apple"}, {"id": "b", "text": "Carrot"}],
         }
 
@@ -42,7 +42,8 @@ def test_quiz_is_graded_on_the_server(client, auth):
     url = check_url(detail)
 
     right = client.post(url, json={"selected": ["c", "a"]}).json()
-    assert right == {"correct": True, "correct_option_ids": ["a", "c"], "explanation": "Apples grow on trees."}
+    assert right["correct"] is True and right["correct_option_ids"] == ["a", "c"]
+    assert right["explanation"] == "Apples grow on trees."
     assert client.post(url, json={"selected": ["a"]}).json()["correct"] is False  # one missing
     assert client.post(url, json={"selected": ["a", "b", "c"]}).json()["correct"] is False  # one extra
     assert client.get(f"/api/courses/{detail['id']}/").json()["stages"][0]["lessons"][0]["blocks"][1]["multiple"] is True

@@ -3,8 +3,15 @@ import { headers } from "next/headers";
 import Providers from "./providers";
 import "./globals.css";
 
+const siteUrl = (process.env.BETTER_AUTH_URL ?? "http://localhost:5173").replace(/\/$/, "");
+const description = "Free courses written by the EduHub community, with quizzes, progress tracking and certificates. Anyone can teach.";
+
 export const metadata: Metadata = {
-  title: "EduHub",
+  metadataBase: new URL(siteUrl),
+  title: { default: "EduHub · Learn from the community", template: "%s · EduHub" },
+  description,
+  openGraph: { siteName: "EduHub", type: "website", description },
+  twitter: { card: "summary_large_image" },
   icons: { icon: { url: "/favicon.svg", type: "image/svg+xml" } },
 };
 

@@ -1,9 +1,10 @@
-import { IconAlertTriangle, IconBulb, IconExternalLink, IconInfoCircle, IconLink } from "@tabler/icons-react";
+import { IconAlertTriangle, IconBulb, IconDownload, IconExternalLink, IconFileText, IconInfoCircle, IconLink } from "@tabler/icons-react";
 import Markdown from "@/components/Lesson/Markdown";
 import QuizView, { type GradeQuiz } from "@/components/Lesson/QuizView";
+import { formatBytes } from "@/utils/courseMeta";
 import { gradeLocally, isFullQuiz } from "@/utils/quiz";
 import type { CalloutTone, LessonBlock } from "@/utils/types/courses";
-import { getYoutubeEmbedUrl } from "@/utils/youtube";
+import { getVideoEmbedUrl } from "@/utils/youtube";
 
 const CALLOUTS: Record<CalloutTone, { label: string; icon: typeof IconBulb; className: string }> = {
   info: { label: "Note", icon: IconInfoCircle, className: "border-accent/30 bg-accent-soft text-accent-soft-foreground" },
@@ -11,12 +12,12 @@ const CALLOUTS: Record<CalloutTone, { label: string; icon: typeof IconBulb; clas
   warning: { label: "Watch out", icon: IconAlertTriangle, className: "border-danger/30 bg-danger/10 text-foreground" },
 };
 
-function BlockView({ block, grade }: { block: LessonBlock; grade: GradeQuiz }) {
+function BlockView({ block, grade, quizResults }: { block: LessonBlock; grade: GradeQuiz; quizResults?: Record<string, boolean> }) {
   switch (block.type) {
     case "text":
       return <Markdown text={block.text} />;
     case "video": {
-      const src = getYoutubeEmbedUrl(block.url);
+      const src = getVideoEmbedUrl(block.url);
       if (!src) return null;
       return (
         <figure className="m-0 flex flex-col gap-2">
@@ -74,25 +75,55 @@ function BlockView({ block, grade }: { block: LessonBlock; grade: GradeQuiz }) {
         </aside>
       );
     }
+    case "image":
+      if (!block.url) return null;
+      return (
+        <figure className="m-0 flex flex-col gap-2">
+          {/* plain img: lesson images come from the API's media host, which differs per environment */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="block max-h-[70vh] w-full rounded-xl bg-surface-secondary object-contain" src={block.url} alt={block.alt} loading="lazy" />
+          {block.caption && <figcaption className="text-sm text-muted">{block.caption}</figcaption>}
+        </figure>
+      );
+    case "file":
+      if (!block.url) return null;
+      return (
+        <a
+          href={block.url}
+          download={block.name}
+          className="flex items-center gap-3 rounded-xl border border-border bg-surface p-4 no-underline transition-colors hover:border-accent/50 hover:bg-surface-secondary"
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground" aria-hidden>
+            <IconFileText size={18} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium text-foreground [overflow-wrap:anywhere]">{block.name}</span>
+            {block.description && <span className="mt-0.5 block text-sm text-muted">{block.description}</span>}
+            {block.size > 0 && <span className="mt-1 block text-xs text-muted">{formatBytes(block.size)}</span>}
+          </span>
+          <IconDownload size={18} className="shrink-0 text-muted" aria-label="Download" />
+        </a>
+      );
     case "quiz":
-      return <QuizView quiz={block} grade={grade} />;
+      return <QuizView quiz={block} grade={grade} answered={quizResults?.[block.id]} />;
   }
 }
 
 // The builder's preview has every answer at hand (and nothing saved yet to ask the API about)
-const gradeHere: GradeQuiz = async (quiz, selected) => {
+const gradeHere: GradeQuiz = async (quiz, answer) => {
   if (!isFullQuiz(quiz)) throw new Error("This quiz can only be checked by the server.");
-  return gradeLocally(quiz, selected);
+  return gradeLocally(quiz, answer);
 };
 
-/** A lesson as learners see it; the course builder's preview uses it too. Pass `grade` to have the API check quizzes. */
-function LessonContent({ blocks, grade = gradeHere }: { blocks: LessonBlock[]; grade?: GradeQuiz }) {
+/** A lesson as learners see it; the course builder's preview uses it too. Pass `grade` to have the API check quizzes,
+ *  and `quizResults` (block id -> right last time) to show how the learner did before. */
+function LessonContent({ blocks, grade = gradeHere, quizResults }: { blocks: LessonBlock[]; grade?: GradeQuiz; quizResults?: Record<string, boolean> }) {
   if (blocks.length === 0) {
     return <p className="m-0 rounded-xl border border-dashed border-border-tertiary px-6 py-10 text-center text-muted">This lesson has no content yet.</p>;
   }
   return (
     <div className="flex flex-col gap-6">
-      {blocks.map((block) => <BlockView key={block.id} block={block} grade={grade} />)}
+      {blocks.map((block) => <BlockView key={block.id} block={block} grade={grade} quizResults={quizResults} />)}
     </div>
   );
 }

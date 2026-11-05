@@ -1,106 +1,40 @@
-"use client";
-
-import DescriptionAbout from "@/components/Description/DescriptionAbout";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { buttonVariants } from "@heroui/react";
 import DescriptionPage from "@/components/Description/DescriptionPage";
-import { Card } from "@heroui/react";
-import { IconAward, IconBackpack, IconBook, IconBulb, IconCrown, IconHeartHandshake, IconPuzzle, IconThumbUp } from "@tabler/icons-react";
 
-const GOALS = [
-  {
-    title: "Foster Creative Problem-Solving",
-    description:
-      "We encourage creative thinking and problem-solving abilities, allowing our students to tackle real-world challenges with confidence and innovation.",
-    Icon: IconBook,
-  },
-  {
-    title: "Promote Collaboration and Community",
-    description:
-      "We believe in the power of collaboration and peer learning. Our platform fosters a supportive and inclusive community where learners can connect, share insights, and grow together.",
-    Icon: IconPuzzle,
-  },
-  {
-    title: "Provide Practical Skills",
-    description:
-      "We focus on delivering practical skills that are relevant to the current industry demands. Our courses are designed to equip learners with the knowledge and tools needed to excel in their chosen field.",
-    Icon: IconBackpack,
-  },
-  {
-    title: "Stay Ahead of the Curve",
-    description:
-      "The digital landscape is constantly evolving, and we strive to stay at the forefront of industry trends. We regularly update our course content to ensure our students receive the latest knowledge and skills.",
-    Icon: IconBulb,
-  },
-] as const;
+export const metadata: Metadata = {
+  title: "About",
+  description: "What EduHub is, who writes the courses, and how the platform is run.",
+};
 
-const ACHIEVEMENTS = [
-  {
-    title: "Trusted by Thousands",
-    description:
-      "We have successfully served thousands of students from the whole world, helping them unlock their potential and achieve their career goals.",
-    Icon: IconCrown,
-  },
-  {
-    title: "Positive Student Feedback",
-    description:
-      "We take pride in the positive feedback we receive from our students, who appreciate the practicality and relevance of our course materials.",
-    Icon: IconThumbUp,
-  },
-  {
-    title: "Award-Winning Courses",
-    description:
-      "Our courses have received recognition and accolades in the industry for their quality, depth of content, and effective teaching methodologies.",
-    Icon: IconAward,
-  },
-  {
-    title: "Industry Partnerships",
-    description:
-      "We have established strong partnerships with industry leaders, enabling us to provide our students with access to the latest tools and technologies.",
-    Icon: IconHeartHandshake,
-  },
-] as const;
+const FACTS = [
+  { title: "Anyone can teach", text: "Every account can build a course. There are no paid plans and no gatekeeping: a course is a draft until its author publishes it." },
+  { title: "Free to learn", text: "Every published course is free. Learners keep their progress, notes and bookmarks, and get a certificate when they finish." },
+  { title: "Moderated by the community", text: "Reviews come only from people who took a lesson. Anyone can report a course, review or comment; enough reports hide it until a moderator looks." },
+  { title: "Your data stays yours", text: "Download everything we keep about you, or delete your account and its content, from the Settings page." },
+];
 
-function About() {
+export default function AboutPage() {
   return (
-    <div className="pb-4">
+    <div className="pb-6">
       <DescriptionPage
         header="About EduHub"
-        description="Welcome to EduHub, a full-stack educational platform built to demonstrate modern web development and real-world learning workflows. Our mission is to showcase how teachers can create and manage courses while students can easily discover, follow, and complete lessons."
+        description="EduHub is a small, independent course platform. Courses are written by the people who use it, and every lesson is free to take."
       />
-
-      <DescriptionAbout
-        header="Achievements"
-        description="Our commitment to excellence has led us to achieve significant milestones along our journey. Here are some of our notable achievements."
-      />
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {ACHIEVEMENTS.map(({ title, description, Icon }) => (
-          <Card key={title} className="gap-2 p-5 sm:p-6">
-            <span className="mb-2 flex size-10 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
-              <Icon size={22} aria-hidden />
-            </span>
-            <Card.Title className="m-0 text-[17px] font-semibold">{title}</Card.Title>
-            <Card.Description className="m-0 text-[15px] text-muted">{description}</Card.Description>
-          </Card>
+      <ul className="m-0 mt-10 grid list-none gap-4 p-0 sm:grid-cols-2">
+        {FACTS.map(({ title, text }) => (
+          <li key={title} className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="m-0 text-base font-semibold">{title}</h2>
+            <p className="m-0 mt-1 text-muted">{text}</p>
+          </li>
         ))}
-      </div>
-
-      <DescriptionAbout
-        header="Our Goals"
-        description="At EduHub, our goal is to empower individuals from all backgrounds to thrive in the world of design and development. We believe that education should be accessible and transformative, enabling learners to pursue their passions and make a meaningful impact.
-Through our carefully crafted courses, we aim to:"
-      />
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {GOALS.map(({ title, description, Icon }) => (
-          <Card key={title} className="gap-2 p-5 sm:p-6">
-            <span className="mb-2 flex size-10 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
-              <Icon size={22} aria-hidden />
-            </span>
-            <Card.Title className="m-0 text-[17px] font-semibold">{title}</Card.Title>
-            <Card.Description className="m-0 text-[15px] text-muted">{description}</Card.Description>
-          </Card>
-        ))}
-      </div>
+      </ul>
+      <section className="mt-10 flex flex-col items-start gap-3 rounded-2xl bg-accent-soft p-6">
+        <h2 className="m-0 text-lg font-semibold text-accent-soft-foreground">Have something to teach?</h2>
+        <p className="m-0 max-w-[60ch] text-muted">Start a draft: it stays private until you publish it.</p>
+        <Link className={buttonVariants()} href="/courses/create">Create a course</Link>
+      </section>
     </div>
   );
 }
-
-export default About;

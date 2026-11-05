@@ -1,4 +1,5 @@
 import logging
+import mimetypes
 import time
 from contextlib import asynccontextmanager
 
@@ -11,9 +12,18 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.config import get_settings
 from app.limits import BodySizeLimitMiddleware
-from app.routers import courses, drafts
+from app.routers import community, courses, drafts, learning, users
 
 settings = get_settings()
+# slim images may lack these, and StaticFiles would then serve them as application/octet-stream
+mimetypes.add_type("image/webp", ".webp")
+mimetypes.add_type("text/markdown", ".md")
+if settings.sentry_dsn:
+    import sentry_sdk
+
+    # errors and slow requests go to the error tracker; request bodies and personal data are not sent
+    sentry_sdk.init(dsn=settings.sentry_dsn, environment=settings.environment, traces_sample_rate=0.1,
+                    send_default_pii=False)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("app.requests")
 
@@ -56,6 +66,9 @@ async def security_headers_and_logging(request: Request, call_next):
     if not request.url.path.startswith("/api/docs"):
         # JSON and images only: nothing here should ever run scripts or be framed
         response.headers.setdefault("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+    if request.url.path.startswith("/media/lesson_uploads/") and not request.url.path.endswith(".webp"):
+        # attachments download instead of opening in the API's origin
+        response.headers.setdefault("Content-Disposition", "attachment")
     if settings.is_prod:
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
     logger.info(
@@ -74,7 +87,7 @@ app.add_middleware(BodySizeLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["authorization", "content-type"],
     max_age=86400,
 )
@@ -88,5 +101,8 @@ def health():
 
 app.include_router(courses.router, prefix="/api")
 app.include_router(drafts.router, prefix="/api")
+app.include_router(learning.router, prefix="/api")
+app.include_router(community.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
 # course images: the demo set shipped in Backend/media and user uploads under media/course_previews
 app.mount("/media", StaticFiles(directory=settings.media_root, check_dir=False), name="media")

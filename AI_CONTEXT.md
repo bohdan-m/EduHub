@@ -25,7 +25,7 @@ API routes are registration/login, token refresh/logout, course list/detail/crea
 
 ## Priorities and caution areas
 
-The worktree was clean when this context was written; inspect `git status --short` before every edit because that can change. Test coverage: backend pytest suite (`Backend/tests/`), TypeScript utility tests, and an end-to-end HTTP test of the running stack (`Backend/e2e/`). CI also builds both Docker images, starts the Compose stack and runs the end-to-end test against it.
+The worktree was clean when this context was written; inspect `git status --short` before every edit because that can change. Test coverage: backend pytest suite (`Backend/tests/`), TypeScript utility tests, an end-to-end HTTP test of the running stack (`Backend/e2e/`) and Playwright browser tests (`Frontend/e2e/`). CI also builds both Docker images, starts the Compose stack and runs both end-to-end suites against it. Production runs from `docker-compose.prod.yml` (Caddy for HTTPS, nightly backups).
 
 Treat these as high-risk areas:
 

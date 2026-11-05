@@ -65,7 +65,8 @@ def clean_tables():
     yield
     with engine.begin() as conn:
         conn.execute(text(
-            "TRUNCATE users, courses, course_images, stages, lessons, course_drafts, rate_limits RESTART IDENTITY CASCADE"
+            "TRUNCATE users, courses, course_images, stages, lessons, course_drafts, rate_limits, uploads, enrollments, "
+            "lesson_progress, quiz_attempts, reviews, comments, reports RESTART IDENTITY CASCADE"
         ))
 
 

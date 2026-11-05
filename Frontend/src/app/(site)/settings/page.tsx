@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import AccountSettings from "@/components/Settings/AccountSettings";
 import { auth } from "@/lib/auth";
 
-export const metadata: Metadata = { title: "Settings · EduHub" };
+export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const requestHeaders = await headers();

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import LoginForm from "@/components/auth/LoginForm";
 import { auth, isGoogleEnabled } from "@/lib/auth";
 
-export const metadata: Metadata = { title: "Log in · EduHub" };
+export const metadata: Metadata = { title: "Log in" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   // a followed verification link signs the user in and lands here, so this also finishes email confirmation

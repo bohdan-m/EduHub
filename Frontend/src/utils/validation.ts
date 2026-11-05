@@ -1,4 +1,4 @@
-import { getYoutubeEmbedUrl } from "./youtube";
+import { getVideoEmbedUrl } from "./youtube";
 
 // Field rules shared by the forms and the Better Auth server hooks. Each returns an error message, or null when valid.
 // Course limits must stay in step with Backend/app/schemas.py.
@@ -23,6 +23,17 @@ export const LIMITS = {
     quizOptions: 8,
     quizExplanation: 1000,
     videoCaption: 200,
+    listItems: 10,
+    listItem: 160,
+    imageAlt: 200,
+    fileBytes: 20 * 1024 * 1024,
+    fileDescription: 300,
+    shortAnswer: 200,
+    review: 2000,
+    comment: 2000,
+    note: 5000,
+    headline: 100,
+    bio: 1000,
 } as const;
 
 // Deliberately loose (something@something.tld); the server is the final judge of an address
@@ -57,11 +68,11 @@ export function validateText(value: string, label: string, max: number): string 
     return null;
 }
 
-/** Optional, but when given it must be a YouTube link the lesson player can embed. */
-export function validateYoutubeUrl(value: string): string | null {
+/** Optional, but when given it must be a YouTube or Vimeo link the lesson player can embed. */
+export function validateVideoUrl(value: string): string | null {
     const url = value.trim();
     if (!url) return null;
-    if (!getYoutubeEmbedUrl(url)) return "Use a YouTube video link, like https://www.youtube.com/watch?v=…";
+    if (!getVideoEmbedUrl(url)) return "Use a YouTube or Vimeo video link, like https://www.youtube.com/watch?v=…";
     return null;
 }
 

@@ -18,7 +18,7 @@ export function contentSecurityPolicy(nonce: string) {
     `img-src 'self' data: blob: ${apiOrigin}`, // course covers are served by the API
     "font-src 'self' data:",
     `connect-src 'self' ${apiOrigin}`,
-    "frame-src https://www.youtube.com https://www.youtube-nocookie.com", // lesson videos are the only embeds
+    "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com", // lesson videos are the only embeds
     "frame-ancestors 'none'",
     "object-src 'none'",
     "base-uri 'self'",

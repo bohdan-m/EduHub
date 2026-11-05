@@ -31,6 +31,18 @@ class Settings(BaseSettings):
     media_root: Path = BASE_DIR / "media"
     enable_populate_db: bool = False
 
+    # comma-separated emails of the people who handle reports (the /moderation page)
+    admin_emails: str = ""
+    # shared with the Next.js server only, for calls no user makes (removing a deleted account's data);
+    # empty disables those endpoints
+    internal_api_secret: str = ""
+    # optional error tracking (Sentry or a compatible service such as GlitchTip)
+    sentry_dsn: str = ""
+
+    @property
+    def admin_emails_set(self) -> set[str]:
+        return {email.strip().lower() for email in self.admin_emails.split(",") if email.strip()}
+
     @property
     def is_prod(self) -> bool:
         return self.environment.lower() == "prod"

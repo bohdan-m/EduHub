@@ -6,7 +6,7 @@ import {
     validateName,
     validatePassword,
     validateText,
-    validateYoutubeUrl,
+    validateVideoUrl,
 } from "../src/utils/validation.js";
 
 test("name: required, trimmed, capped", () => {
@@ -38,10 +38,11 @@ test("text: blank and over-long values are rejected", () => {
 });
 
 test("youtube link: optional, but must be embeddable", () => {
-    assert.equal(validateYoutubeUrl(""), null);
-    assert.equal(validateYoutubeUrl("https://youtu.be/dQw4w9WgXcQ"), null);
-    assert.ok(validateYoutubeUrl("https://vimeo.com/123"));
-    assert.ok(validateYoutubeUrl("not a url"));
+    assert.equal(validateVideoUrl(""), null);
+    assert.equal(validateVideoUrl("https://youtu.be/dQw4w9WgXcQ"), null);
+    assert.equal(validateVideoUrl("https://vimeo.com/123"), null);
+    assert.ok(validateVideoUrl("https://example.com/video.mp4"));
+    assert.ok(validateVideoUrl("not a url"));
 });
 
 test("images: count, type and size", () => {

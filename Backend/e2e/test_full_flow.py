@@ -32,6 +32,7 @@ PASSWORD = "E2e-pass-" + uuid.uuid4().hex[:8]
 COURSE = {
     "title": "E2E course",
     "description": "Created by the end-to-end test.",
+    "status": "published",  # new courses are private drafts otherwise
     "stages": [
         {
             "title": "Basics",
@@ -176,15 +177,17 @@ def test_full_flow_with_two_factor():
     assert jwt.decode(bob.api_token(), options={"verify_signature": False})["name"] == "E2E Bob Renamed"
 
     # any account creates courses (multipart with an image, like the create page)
-    form = {"title": COURSE["title"], "description": COURSE["description"], "stages": json.dumps(COURSE["stages"])}
+    form = {"title": COURSE["title"], "description": COURSE["description"], "status": "published",
+            "stages": json.dumps(COURSE["stages"])}
     cover = ("uploaded_images", ("cover.png", png(), "image/png"))
     created = ada.api("POST", "/courses/create/", data=form, files=[cover])
     assert created.status_code == 201, created.text
     course = created.json()
-    assert course["author"] == {"id": course["author"]["id"], "name": "E2E Ada"}
+    assert course["author"] == {"id": course["author"]["id"], "name": "E2E Ada", "headline": ""}
     image_url = course["images"][0]["image"]
     image = httpx.get(image_url)
-    assert image.status_code == 200 and image.headers["content-type"] == "image/png"
+    # covers are re-encoded as WebP, without the uploaded file's metadata
+    assert image.status_code == 200 and image.headers["content-type"] == "image/webp"
 
     detail = Browser().api("GET", f"/courses/{course['id']}/", token=None)
     assert detail.status_code == 200
@@ -200,6 +203,7 @@ def test_full_flow_with_two_factor():
     edit = {
         "title": "E2E course, edited",
         "description": COURSE["description"],
+        "status": "published",  # an edit replaces the whole course, its visibility included
         "kept_images": [],
         "stages": [{
             "id": stages[0]["id"], "title": "Basics", "order": 1,

@@ -42,10 +42,11 @@ The API on the host needs a reachable PostgreSQL and the POSTGRES_* / BETTER_AUT
 (cd Frontend && npm run build)
 (cd Backend && pytest && flake8)
 (cd Backend && E2E_FRONTEND_URL=http://localhost:5173 E2E_API_URL=http://localhost:8000 pytest e2e)
+(cd Frontend && npm run test:e2e)   # Playwright; E2E_BROWSER_CHANNEL=chrome uses an installed Chrome
 docker compose build
 ```
 
-`npm run test:unit` compiles its test files to ignored `Frontend/.tmp-tests/` and runs Node's test runner. `pytest` is the backend unit/integration layer (real Postgres, its own `_test` database); `pytest e2e` drives the running stack over HTTP. CI runs the backend tests, frontend lint/type/unit/build checks, Docker image builds, and a Compose stack with health checks and the end-to-end test. A green build, lint run, type check, or health endpoint alone is never behavioral verification.
+`npm run test:unit` compiles its test files to ignored `Frontend/.tmp-tests/` and runs Node's test runner. `pytest` is the backend unit/integration layer (real Postgres, its own `_test` database); `pytest e2e` drives the running stack over HTTP, and `npm run test:e2e` drives it in a real browser (Playwright, `Frontend/e2e/`). CI runs the backend tests, frontend lint/type/unit/build checks, Docker image builds, and a Compose stack with health checks and both end-to-end suites. Both suites read emailed links from Mailpit and need `AUTH_RATE_LIMIT_SCALE=50` (they sign up many accounts a minute). A green build, lint run, type check, or health endpoint alone is never behavioral verification.
 
 ## What “done” requires
 
@@ -64,7 +65,7 @@ For any calculation or future financial workflow, tests must name the source-of-
 
 ## Browser runtime verification
 
-No Playwright/Cypress configuration or browser binaries are currently checked in. Do not invent a browser command or claim browser coverage. When adding Playwright, pin it in `Frontend/package.json`, use `npx playwright install` only after stating the browser download need, and add scripts for headless, headed (`--headed`), screenshots/traces/video, and HTML reports. If managed browsers are unavailable, use an installed local browser and report the exact limitation.
+Playwright is configured in `Frontend/playwright.config.ts` with specs in `Frontend/e2e/` (`npm run test:e2e`; `--headed` to watch; traces and screenshots are kept for failures, an HTML report in CI). `e2e/helpers.ts` fails a test on page errors, Content Security Policy violations and 5xx responses, reads emailed links from Mailpit, and can create courses through the API (`createCourseAs`) to keep setup fast. If Playwright's own Chromium can't be downloaded, `E2E_BROWSER_CHANNEL=chrome` uses an installed Chrome. A hidden or backgrounded browser tab pauses `requestAnimationFrame`, which React uses to reveal streamed server-rendered content, so judge hydration in a visible or headless browser.
 
 Use selectors in this order: accessible role, `data-testid`, associated label, stable visible text, CSS only as a last resort. Runtime automation must collect `console`, `pageerror`, `requestfailed`, and unexpected non-success HTTP responses; retain sanitized screenshots/traces/reports as evidence. Correlate a UI action with the browser network request and `docker compose logs --tail=100 web` (the API logs each request to stdout).
 

@@ -23,15 +23,18 @@ ALL_BLOCKS = [
 ]
 
 
-def course(*stages, title="Course"):
-    return {"title": title, "description": "About it.", "stages": list(stages)}
+def course(*stages, title="Course", status="published"):
+    return {"title": title, "description": "About it.", "stages": list(stages), "status": status}
 
 
 def stage(title, *lessons, order=1, id=None):
     return {"id": id, "title": title, "order": order, "lessons": list(lessons)}
 
 
-def lesson(title, order=1, blocks=(), id=None):
+TEXT = {"type": "text", "text": "Some text."}
+
+
+def lesson(title, order=1, blocks=(TEXT,), id=None):
     return {"id": id, "title": title, "order": order, "blocks": list(blocks)}
 
 
@@ -51,7 +54,9 @@ def test_every_block_type_round_trips(client, auth):
 
 
 def test_lessons_may_be_empty_and_missing_ids_are_generated(client, auth):
-    body = course(stage("Outline", lesson("Later"), lesson("Now", 2, [{"type": "text", "text": "x"}])))
+    # a draft may have empty lessons; publishing needs content in each
+    body = course(stage("Outline", lesson("Later", blocks=()), lesson("Now", 2, [{"type": "text", "text": "x"}])),
+                  status="draft")
     detail = create(client, auth(), body)
     later, now = detail["stages"][0]["lessons"]
     assert later["blocks"] == []
@@ -73,7 +78,7 @@ def quiz(**changes):
     [
         ({"type": "text", "text": "   "}, "may not be blank"),
         ({"type": "text", "text": "x" * 20001}, "20000 characters or fewer"),
-        ({"type": "video", "url": ""}, "Add a YouTube link."),
+        ({"type": "video", "url": ""}, "Add a YouTube or Vimeo link."),
         ({"type": "link", "url": "javascript:alert(1)", "title": "x"}, "starting with https://"),
         ({"type": "link", "url": "https://example.com", "title": ""}, "may not be blank"),
         ({"type": "callout", "tone": "danger", "text": "x"}, "'info', 'tip' or 'warning'"),

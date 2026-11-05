@@ -11,10 +11,10 @@ import Brand from "@/components/Brand";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const NAV_LINKS = [
-    { to: "/home", label: "Home" },
-    { to: "/about", label: "About Us" },
-    { to: "/pricing", label: "Pricing" },
-    { to: "/contact", label: "Contact" },
+    { to: "/home", label: "Courses", signedIn: false },
+    { to: "/learning", label: "My learning", signedIn: true },
+    { to: "/teach", label: "Teach", signedIn: true },
+    { to: "/about", label: "About", signedIn: false },
 ];
 
 const navClass = (isActive: boolean) =>
@@ -31,12 +31,14 @@ function HeaderPage() {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const closeMenu = () => setIsMobileMenuOpen(false);
+    const links = NAV_LINKS.filter((link) => !link.signedIn || user);
+    const isActive = (to: string) => pathname === to || (to !== "/home" && pathname.startsWith(`${to}/`));
 
     const handleLogout = async () => {
         await authClient.signOut();
         apiToken.clear();
         closeMenu();
-        router.push("/login");
+        router.push("/");
         router.refresh();
     };
 
@@ -70,8 +72,8 @@ function HeaderPage() {
             <nav className="flex items-center gap-8" aria-label="Main">
                 <Brand />
                 <div className="hidden gap-1 md:flex">
-                    {NAV_LINKS.map(({ to, label }) => (
-                        <Link key={to} className={navClass(pathname === to)} href={to} aria-current={pathname === to ? "page" : undefined}>{label}</Link>
+                    {links.map(({ to, label }) => (
+                        <Link key={to} className={navClass(isActive(to))} href={to} aria-current={isActive(to) ? "page" : undefined}>{label}</Link>
                     ))}
                 </div>
             </nav>
@@ -95,12 +97,12 @@ function HeaderPage() {
                                     <Drawer.CloseTrigger><IconX size={16} /></Drawer.CloseTrigger>
                                 </Drawer.Header>
                                 <Drawer.Body className="flex flex-col gap-1">
-                                    {NAV_LINKS.map(({ to, label }) => (
+                                    {links.map(({ to, label }) => (
                                         <Link
                                             key={to}
-                                            className={`${navClass(pathname === to)} w-full justify-start`}
+                                            className={`${navClass(isActive(to))} w-full justify-start`}
                                             href={to}
-                                            aria-current={pathname === to ? "page" : undefined}
+                                            aria-current={isActive(to) ? "page" : undefined}
                                             onClick={closeMenu}
                                         >
                                             {label}

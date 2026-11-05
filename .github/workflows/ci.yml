@@ -276,6 +276,8 @@ jobs:
           E2E_BASE_URL: http://localhost:5173
           E2E_MAILPIT_URL: http://localhost:8025
         run: |
+          # compose mounts a volume at node_modules, so Docker created that folder as root; npm ci (exit 243 = EACCES) must write into it
+          if [ -d node_modules ]; then sudo chown "$(id -u):$(id -g)" node_modules; fi
           npm ci
           npx playwright install --with-deps chromium
           npm run test:e2e

@@ -1,8 +1,18 @@
 """Server-side quiz grading, course drafts, rate limits and body size caps."""
+import time
+from types import SimpleNamespace
+
 import pytest
 
 from app import limits
 from tests.test_course_content import QUIZ, course, create, lesson, stage
+
+
+@pytest.fixture
+def frozen_clock(monkeypatch):
+    """Stops the limiter's clock, so a run crossing a minute boundary can't reset the count mid-test."""
+    now = time.time()
+    monkeypatch.setattr(limits, "time", SimpleNamespace(time=lambda: now))
 
 
 def quiz_course(client, headers, quiz=QUIZ):
@@ -82,7 +92,7 @@ def test_drafts_are_private_to_the_courses_author(client, auth):
     assert client.put("/api/drafts/", json={"data": {}}, headers=auth(sub="ada")).status_code == 400
 
 
-def test_course_writes_are_rate_limited_per_user(client, auth):
+def test_course_writes_are_rate_limited_per_user(client, auth, frozen_clock):
     body = course(stage("S", lesson("L")))
     for _ in range(30):
         assert client.post("/api/courses/create/", json=body, headers=auth(sub="ada")).status_code == 201
@@ -94,7 +104,7 @@ def test_course_writes_are_rate_limited_per_user(client, auth):
     assert client.post("/api/courses/create/", json=body, headers=auth(sub="bob")).status_code == 201
 
 
-def test_quiz_checks_by_guests_are_rate_limited_by_address(client, auth):
+def test_quiz_checks_by_guests_are_rate_limited_by_address(client, auth, frozen_clock):
     url = check_url(quiz_course(client, auth(sub="ada")))
     codes = [client.post(url, json={"selected": ["a"]}).status_code for _ in range(121)]
     assert codes[:120] == [200] * 120 and codes[120] == 429

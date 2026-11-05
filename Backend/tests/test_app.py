@@ -1,3 +1,4 @@
+import pytest
 from sqlalchemy import func, select
 
 from app.models import Course, User
@@ -25,6 +26,13 @@ def test_cors_allows_only_the_frontend(client):
 
     assert allowed.headers["access-control-allow-origin"] == "http://localhost:5173"
     assert "access-control-allow-origin" not in blocked.headers
+
+
+@pytest.mark.parametrize("method", ["GET", "POST", "PUT", "DELETE"])
+def test_cors_preflight_passes_for_every_method_the_frontend_uses(client, method):
+    headers = {"Origin": "http://localhost:5173", "Access-Control-Request-Method": method,
+               "Access-Control-Request-Headers": "authorization,content-type"}
+    assert client.options("/api/courses/1/", headers=headers).status_code == 200
 
 
 def test_unknown_host_is_rejected(client):

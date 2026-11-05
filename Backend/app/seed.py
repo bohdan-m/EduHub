@@ -1,10 +1,12 @@
 """Seeds the demo courses on an empty database (no user accounts). Run: python -m app.seed"""
 import logging
+import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
+from app.content import course_totals
 from app.db import SessionLocal
 from app.models import Course, CourseImage, Lesson, Stage
 
@@ -150,24 +152,40 @@ def get_course_data():
     }
 
 
+def video_block(url: str) -> dict:
+    return {"type": "video", "id": uuid.uuid4().hex, "url": url, "caption": ""}
+
+
 def seed(db: Session) -> int:
     """Create the demo courses unless any course exists. Returns how many were created."""
     if db.scalar(select(Course.id).limit(1)) is not None:
         return 0
 
-    courses = get_course_data().values()
-    for info in courses:
+    courses = get_course_data()
+    for key, info in courses.items():
+        lesson_count, minutes = course_totals(
+            [[video_block("")] for stage in info["stages"] for _ in stage["lessons"]]
+        )
         db.add(
             Course(
                 title=info["title"],
                 description=info["description"],
                 author=None,  # shown as "EduHub"
+                status="published",
+                published_at=func.now(),
+                category=key,  # the demo set is keyed by its category
+                level="beginner",
+                lesson_count=lesson_count,
+                estimated_minutes=minutes,
                 images=[CourseImage(image=image) for image in info["images"]],
                 stages=[
                     Stage(
                         title=stage["title"],
                         order=stage["order"],
-                        lessons=[Lesson(title=title, url=url, order=i) for i, (title, url) in enumerate(stage["lessons"], 1)],
+                        lessons=[
+                            Lesson(title=title, order=i, blocks=[video_block(url)])
+                            for i, (title, url) in enumerate(stage["lessons"], 1)
+                        ],
                     )
                     for stage in info["stages"]
                 ],

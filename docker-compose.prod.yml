@@ -1,0 +1,114 @@
+# Production: built images (no source mounts), HTTPS through Caddy, daily backups.
+#
+#   cp .env.example .env    # ENVIRONMENT=prod, real secrets, SMTP, SITE_DOMAIN, API_DOMAIN (see README "Deploying")
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Only Caddy is reachable from outside (ports 80/443); it gets certificates from Let's Encrypt by itself.
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-eduhub}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: ./Backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ENVIRONMENT: prod
+      POSTGRES_HOST: db
+      ALLOWED_HOSTS: ${API_DOMAIN:?API_DOMAIN is required},web
+      CORS_ALLOWED_ORIGINS: https://${SITE_DOMAIN:?SITE_DOMAIN is required}
+      BETTER_AUTH_URL: https://${SITE_DOMAIN}
+      BETTER_AUTH_JWKS_URL: http://frontend:3000/api/auth/jwks
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:?INTERNAL_API_SECRET is required}
+      ENABLE_POPULATE_DB: "false"
+      # only Caddy can reach the API, so its X-Forwarded-For (the real client address, used by the rate limits) is trusted
+      FORWARDED_ALLOW_IPS: "*"
+    volumes:
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/health/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./Frontend
+      target: prod
+      args:
+        NEXT_PUBLIC_API_URL: https://${API_DOMAIN}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      BETTER_AUTH_URL: https://${SITE_DOMAIN}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
+      NEXT_PUBLIC_API_URL: https://${API_DOMAIN}
+      API_INTERNAL_URL: http://web:8000
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-eduhub}
+      PGUSER: ${POSTGRES_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - frontend
+
+  # A dump of the database and an archive of the uploads every night, kept for 14 days in ./backups.
+  # Copy that folder off the server too (rsync, rclone to object storage): a backup on the same disk is not enough.
+  backup:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGDATABASE: ${POSTGRES_DB:-eduhub}
+      PGUSER: ${POSTGRES_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      KEEP_DAYS: "14"
+    volumes:
+      - ./deploy/backup.sh:/backup.sh:ro
+      - ./backups:/backups
+      - media:/media:ro
+    entrypoint: ["sh", "/backup.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  media:
+  caddy_data:
+  caddy_config:

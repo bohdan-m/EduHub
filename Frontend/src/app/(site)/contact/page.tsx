@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card, FieldError, Form, Input, Label, TextArea, TextField } from "@heroui/react";
-import { IconMail, IconMapPin, IconPhone, type TablerIcon } from "@tabler/icons-react";
+import { IconMail, IconMapPin, type TablerIcon } from "@tabler/icons-react";
 import DescriptionPage from "@/components/Description/DescriptionPage";
 import { validateEmail, validateText } from "@/utils/validation";
 
@@ -13,7 +13,6 @@ const IconTile = ({ icon: Icon }: { icon: TablerIcon }) => (
 );
 
 const CONTACT_EMAIL = "bohdanmatvieiev1@gmail.com";
-const CONTACT_PHONE = "+91 00000 00000";
 const CONTACT_LOCATION = "The Czech Republic";
 
 function Contact() {
@@ -37,7 +36,7 @@ function Contact() {
     <div className="pb-4">
       <DescriptionPage
         header="Contact Us"
-        description="Welcome to EduHub's Contact page, where you can get in touch with our team for support, feedback, or partnership inquiries. Whether you have questions about courses, platform features, or technical details, we are here to help. Reach out to us and let us know how we can support your experience with EduHub."
+        description="Questions, feedback, a bug or a problem with a course? Write to us. To flag a course, review or comment, use its Report button: that reaches the moderators fastest."
       />
       <div className="mt-10 grid items-start gap-6 md:grid-cols-[1fr_minmax(260px,340px)]">
         <Card className="p-5 sm:p-7">
@@ -89,10 +88,6 @@ function Contact() {
           <Card className="flex-row items-center gap-3 px-5 py-4">
             <IconTile icon={IconMail} />
             <a className="min-w-0 text-[15px] text-foreground [overflow-wrap:anywhere] hover:text-accent" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-          </Card>
-          <Card className="flex-row items-center gap-3 px-5 py-4">
-            <IconTile icon={IconPhone} />
-            <a className="text-[15px] text-foreground hover:text-accent" href={`tel:${CONTACT_PHONE.replace(/\s/g, "")}`}>{CONTACT_PHONE}</a>
           </Card>
           <Card className="flex-row items-center gap-3 px-5 py-4">
             <IconTile icon={IconMapPin} />

@@ -1,4 +1,5 @@
-export function getYoutubeEmbedUrl(value: string) {
+/** The embeddable player URL for a YouTube or Vimeo link (the only hosts lessons embed), or null. */
+export function getVideoEmbedUrl(value: string) {
     if (!value) {
         return null;
     }
@@ -27,9 +28,16 @@ export function getYoutubeEmbedUrl(value: string) {
                 return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
             }
         }
+
+        if (host === "vimeo.com" || host === "player.vimeo.com") {
+            // vimeo.com/123, vimeo.com/channels/x/123 and player.vimeo.com/video/123 all end in the numeric id
+            const videoId = url.pathname.split("/").filter(Boolean).reverse().find((part) => /^\d+$/.test(part));
+            return videoId ? `https://player.vimeo.com/video/${videoId}` : null;
+        }
     } catch {
         return null;
     }
 
     return null;
 }
+

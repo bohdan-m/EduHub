@@ -6,15 +6,20 @@ import { useRouter } from "next/navigation";
 import { Button, FieldError, Form, Input, Label, TextField } from "@heroui/react";
 import { apiToken } from "@/api/axios.config";
 import AuthLayout from "@/components/AuthLayout";
+import CheckEmail from "@/components/auth/CheckEmail";
 import GoogleButton, { OrDivider } from "@/components/auth/GoogleButton";
 import { authClient } from "@/lib/auth-client";
 import { validateEmail, validatePassword } from "@/utils/validation";
 
-function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
+// Better Auth sends people back here with ?error=... when an emailed link is expired or already used
+const LINK_ERROR = "That link has expired or was already used. Log in to get a new one.";
+
+function LoginForm({ googleEnabled, linkError }: { googleEnabled: boolean; linkError: boolean }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(linkError ? LINK_ERROR : null);
   const [isLoading, setIsLoading] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -22,16 +27,21 @@ function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
     setError(null);
     setIsLoading(true);
 
-    const { error: signInError } = await authClient.signIn.email({ email, password });
+    const { data, error: signInError } = await authClient.signIn.email({ email, password, callbackURL: "/login" });
     if (signInError) {
-      setError(signInError.message ?? "Couldn't log in. Check your email and password.");
+      // the right password on an unconfirmed account: Better Auth has just emailed a fresh link
+      if (signInError.code === "EMAIL_NOT_VERIFIED") setUnverifiedEmail(email.trim());
+      else setError(signInError.message ?? "Couldn't log in. Check your email and password.");
       setIsLoading(false);
       return;
     }
     apiToken.clear();
-    router.push("/home");
+    // two-factor accounts get a short-lived challenge cookie instead of a session
+    router.push(data && "twoFactorRedirect" in data && data.twoFactorRedirect ? "/two-factor" : "/home");
     router.refresh();
   };
+
+  if (unverifiedEmail) return <CheckEmail email={unverifiedEmail} />;
 
   return (
     <AuthLayout
@@ -61,6 +71,7 @@ function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
             <Input />
             <FieldError />
           </TextField>
+          <Link className="-mt-3 self-end text-sm font-medium text-link" href="/forgot-password">Forgot password?</Link>
 
           <Button type="submit" size="lg" fullWidth isPending={isLoading} className="mt-2">
             {isLoading ? "Logging in…" : "Log in"}

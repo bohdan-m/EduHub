@@ -31,3 +31,8 @@ next-env.d.ts
 
 # compiled unit tests
 .tmp-tests
+
+# Playwright output
+/playwright-report/
+/test-results/
+/blob-report/

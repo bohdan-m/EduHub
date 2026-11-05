@@ -15,11 +15,11 @@ COURSE = {
 
 
 def test_valid_token_creates_local_user(client, db, auth):
-    response = client.get("/api/courses/", headers=auth(role="teacher", sub="ada", name="Ada Lovelace"))
+    response = client.get("/api/courses/", headers=auth(sub="ada", name="Ada Lovelace"))
 
     assert response.status_code == 200
     user = db.scalar(select(User).where(User.auth_id == "ada"))
-    assert (user.email, user.name, user.role) == ("ada@example.test", "Ada Lovelace", "teacher")
+    assert (user.email, user.name) == ("ada@example.test", "Ada Lovelace")
 
 
 def test_later_token_updates_mirrored_fields(client, db, auth):
@@ -36,8 +36,6 @@ def test_later_token_updates_mirrored_fields(client, db, auth):
         pytest.param({"iat": int(time.time()) - 3600, "exp": int(time.time()) - 1800}, id="expired"),
         pytest.param({"iss": "http://evil.test"}, id="wrong issuer"),
         pytest.param({"aud": "http://other-app.test"}, id="wrong audience"),
-        pytest.param({"role": None}, id="no role"),
-        pytest.param({"role": "admin"}, id="unknown role"),
         pytest.param({"sub": None}, id="no subject"),
         pytest.param({"exp": None}, id="no expiry"),
     ],
@@ -61,7 +59,7 @@ def test_hs256_token_is_rejected(client, signing_key):
     # algorithm confusion: a token "signed" with a shared secret must never be accepted
     now = int(time.time())
     forged = jwt.encode(
-        {"sub": "x", "role": "teacher", "iss": ISSUER, "aud": ISSUER, "iat": now, "exp": now + 900},
+        {"sub": "x", "iss": ISSUER, "aud": ISSUER, "iat": now, "exp": now + 900},
         "a-shared-secret-an-attacker-might-guess-0123456789",
         algorithm="HS256",
     )
@@ -99,6 +97,7 @@ def test_guest_can_browse_but_not_create(client):
     assert client.post("/api/courses/create/", json=COURSE).status_code == 401
 
 
-def test_student_cannot_create_or_delete(client, auth):
-    assert client.post("/api/courses/create/", json=COURSE, headers=auth(role="student")).status_code == 403
-    assert client.delete("/api/courses/1/delete/", headers=auth(role="student")).status_code == 403
+def test_any_signed_in_user_can_create_but_guests_cannot_delete(client, auth):
+    # a token from before roles were dropped still carries one; it is simply ignored
+    assert client.post("/api/courses/create/", json=COURSE, headers=auth(role="student")).status_code == 201
+    assert client.delete("/api/courses/1/delete/").status_code == 401

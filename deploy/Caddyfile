@@ -1,0 +1,15 @@
+# HTTPS for the site and the API; Caddy obtains and renews the certificates itself.
+# It also sets X-Forwarded-For, which both rate limiters use to tell clients apart.
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy frontend:3000
+}
+
+{$API_DOMAIN} {
+	encode zstd gzip
+	# the API caps bodies itself too (30 MB with uploads); this stops bigger ones before they reach it
+	request_body {
+		max_size 32MB
+	}
+	reverse_proxy web:8000
+}

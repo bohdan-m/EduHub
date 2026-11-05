@@ -39,3 +39,6 @@ htmlcov/
 CLAUDE.md
 graphify-out/
 skills-lock.json
+
+# production backups (docker-compose.prod.yml)
+backups/

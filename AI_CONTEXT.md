@@ -16,8 +16,8 @@ This workspace is **one Git repository**: EduHub. It is a small full-stack learn
 | Browser app | `Frontend/src/` | `http://localhost:5173`; `NEXT_PUBLIC_API_URL` defaults to `http://localhost:8000` |
 | API | `Backend/app/main.py`, `Backend/app/routers/` | `http://localhost:8000/api/`; health: `/api/health/`; docs (dev): `/api/docs` |
 | Database | `Backend/app/models.py`, Alembic migrations in `Backend/migrations/versions/` | PostgreSQL 15, Compose service `db:5432` |
-| Auth | Better Auth in `Frontend/src/lib/` (`/api/auth/*`), `Backend/app/auth.py` | Better Auth owns sign-up/login/sessions/Google (HttpOnly cookie, tables in the Postgres `auth` schema); the API verifies its 15-minute EdDSA JWTs via JWKS and mirrors users by `auth_id` |
-| Course domain | `Backend/app/routers/courses.py`, `Backend/app/schemas.py`, course pages/API client | public list/detail; teacher-only create/delete; multipart image upload supported |
+| Auth | Better Auth in `Frontend/src/lib/` (`/api/auth/*`), `Backend/app/auth.py` | Better Auth owns sign-up/login/sessions/Google, email confirmation and optional two-factor (HttpOnly cookie, tables in the Postgres `auth` schema); the API verifies its 15-minute EdDSA JWTs via JWKS and mirrors users by `auth_id` |
+| Course domain | `Backend/app/routers/courses.py`, `Backend/app/schemas.py`, course pages/API client | public list/detail; lessons hold JSON content blocks (text/video/link/callout/quiz); any signed-in account creates, only the author edits (PUT, ids kept) or deletes; `?mine=true` lists own courses; multipart image upload supported |
 | Assets / logs | `Backend/media/` | demo images plus uploads in `media/course_previews/`, served by the API at `/media/`; request logs go to stdout |
 | Delivery / CI | `docker-compose.yml`, Dockerfiles, `.github/workflows/ci.yml` | dev runs `next dev` and `uvicorn --reload`; prod entrypoint starts uvicorn workers; no separate IaC or deployment manifest is present |
 
@@ -25,13 +25,13 @@ API routes are registration/login, token refresh/logout, course list/detail/crea
 
 ## Priorities and caution areas
 
-The worktree was clean when this context was written; inspect `git status --short` before every edit because that can change. Test coverage: backend pytest suite (`Backend/tests/`), TypeScript utility tests, and an end-to-end HTTP test of the running stack (`Backend/e2e/`). CI also builds both Docker images, starts the Compose stack and runs the end-to-end test against it.
+The worktree was clean when this context was written; inspect `git status --short` before every edit because that can change. Test coverage: backend pytest suite (`Backend/tests/`), TypeScript utility tests, an end-to-end HTTP test of the running stack (`Backend/e2e/`) and Playwright browser tests (`Frontend/e2e/`). CI also builds both Docker images, starts the Compose stack and runs both end-to-end suites against it. Production runs from `docker-compose.prod.yml` (Caddy for HTTPS, nightly backups).
 
 Treat these as high-risk areas:
 
 - `Backend/app/config.py`, `Backend/app/main.py`, `.env`, `.env.example`, Compose and Dockerfiles: secrets, CORS, production security, database connectivity, and startup behavior.
 - `Backend/migrations/versions/`: add Alembic migrations; do not edit applied ones.
-- `Backend/app/auth.py`, `Frontend/src/lib/auth-options.ts`, and `Frontend/src/api/axios.config.ts`: authentication, role authorization, and token handling.
+- `Backend/app/auth.py`, `Frontend/src/lib/auth-options.ts`, and `Frontend/src/api/axios.config.ts`: authentication, ownership checks, and token handling.
 - `Backend/app/schemas.py`, `Backend/app/media.py`: nested writes and uploads must stay atomic and validated.
 - `.env` is ignored and must never be printed or committed. User uploads in `Backend/media/course_previews/` are local data.
 

@@ -1,9 +1,17 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Providers from "./providers";
 import "./globals.css";
 
+const siteUrl = (process.env.BETTER_AUTH_URL ?? "http://localhost:5173").replace(/\/$/, "");
+const description = "Free courses written by the EduHub community, with quizzes, progress tracking and certificates. Anyone can teach.";
+
 export const metadata: Metadata = {
-  title: "EduHub",
+  metadataBase: new URL(siteUrl),
+  title: { default: "EduHub · Learn from the community", template: "%s · EduHub" },
+  description,
+  openGraph: { siteName: "EduHub", type: "website", description },
+  twitter: { card: "summary_large_image" },
   icons: { icon: { url: "/favicon.svg", type: "image/svg+xml" } },
 };
 
@@ -19,12 +27,14 @@ const themeScript = `(function () {
   document.head.appendChild(meta);
 })();`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // src/proxy.ts makes a nonce per request; inline scripts without it are blocked by the page's policy
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     // the theme script changes <html>'s class before React hydrates
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
         <Providers>

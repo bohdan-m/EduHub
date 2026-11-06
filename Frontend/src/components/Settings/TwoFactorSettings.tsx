@@ -2,8 +2,9 @@
 
 import { useState, type FormEvent, type ReactNode } from "react";
 import QRCode from "react-qr-code";
-import { Alert, Button, Card, FieldError, Form, Input, Label, Switch, TextField } from "@heroui/react";
-import { IconAlertCircle, IconCheck, IconCopy, IconShieldLock } from "@tabler/icons-react";
+import { Alert, Button, FieldError, Form, Input, Label, Switch, TextField } from "@heroui/react";
+import { IconAlertCircle, IconCheck, IconCopy } from "@tabler/icons-react";
+import SettingRow from "@/components/Settings/SettingRow";
 import { authClient } from "@/lib/auth-client";
 import { validatePassword, validateTotpCode } from "@/utils/validation";
 
@@ -99,28 +100,19 @@ function TwoFactorSettings({ enabled, onChange }: { enabled: boolean; onChange: 
   const toggle = () => (step.name === "idle" ? setStep({ name: "password", action: enabled ? "disable" : "enable" }) : reset());
 
   return (
-    <Card className="p-0">
-      <div className="flex items-start gap-4 p-5 sm:p-6">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground" aria-hidden>
-          <IconShieldLock size={20} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h3 className="m-0 text-base font-semibold">Two-factor authentication</h3>
-          <p className="m-0 mt-1 text-sm text-muted">
-            {enabled
-              ? "On. Logging in with your password also asks for a code from your authenticator app."
-              : "Ask for a code from an authenticator app (Google Authenticator, 1Password, Authy) when you log in with your password."}
-          </p>
-        </div>
-        <Switch className="mt-1 shrink-0" isSelected={isOn} onChange={toggle} isDisabled={isLoading} aria-label="Two-factor authentication">
+    <SettingRow title="Two-factor authentication"
+      detail={step.name !== "idle"
+        ? (isOn ? "Setting up" : "Turning off")
+        : enabled ? "On: logging in also asks for a code from your authenticator app" : "Off: ask for a code from an authenticator app when you log in"}
+      control={(
+        <Switch isSelected={isOn} onChange={toggle} isDisabled={isLoading} aria-label="Two-factor authentication">
           <Switch.Content>
             <Switch.Control><Switch.Thumb /></Switch.Control>
           </Switch.Content>
         </Switch>
-      </div>
-
+      )}>
       {step.name !== "idle" && (
-        <div className="border-t border-separator p-5 sm:p-6">
+        <div className="settings-reveal mt-4">
           {step.name === "password" && (
             <Form className="flex max-w-sm flex-col gap-4" onSubmit={submitPassword}>
               {errorAlert}
@@ -199,7 +191,7 @@ function TwoFactorSettings({ enabled, onChange }: { enabled: boolean; onChange: 
           )}
         </div>
       )}
-    </Card>
+    </SettingRow>
   );
 }
 

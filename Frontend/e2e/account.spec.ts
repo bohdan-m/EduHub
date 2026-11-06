@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
-import { PASSWORD, emailedLink, logIn, signUp, watchForErrors } from "./helpers";
+import { PASSWORD, emailedLink, logIn, openForm, signUp, watchForErrors } from "./helpers";
 
 test("profile, data export, password change and account deletion from Settings", async ({ page, request }) => {
   const noErrors = watchForErrors(page);
@@ -8,9 +8,12 @@ test("profile, data export, password change and account deletion from Settings",
   await page.goto("/settings");
 
   // profile: shown on the public author page
+  // nothing is editable until asked for; details show as plain text
+  await expect(page.getByLabel("New password")).toHaveCount(0);
+  await page.getByRole("button", { name: "Edit profile" }).click();
   await page.getByLabel("Headline").fill("Teaches with tests");
   await page.getByRole("button", { name: "Save profile" }).click();
-  await expect(page.getByText("Profile saved.")).toBeVisible();
+  await expect(page.getByText("Profile saved")).toBeVisible();
   await page.getByRole("link", { name: "View your author page" }).click();
   await expect(page.getByText("Teaches with tests")).toBeVisible();
   await page.goto("/settings");
@@ -27,21 +30,24 @@ test("profile, data export, password change and account deletion from Settings",
 
   // password change, then sign in with the new one
   const newPassword = `${PASSWORD}-changed`;
+  await page.getByRole("button", { name: "Change password" }).click();
   await page.getByLabel("Current password").fill(PASSWORD);
   await page.getByLabel("New password").fill(newPassword);
   await page.getByRole("button", { name: "Change password" }).click();
   await expect(page.getByText("Password changed.")).toBeVisible();
   await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page.getByRole("heading", { name: /Learn something new/ })).toBeVisible();
   await logIn(page, email, newPassword);
 
   // deletion is confirmed from the inbox; the account is then gone
   await page.goto("/settings");
+  await page.getByRole("button", { name: "Delete account" }).click();
   await page.getByLabel("Your password").fill(newPassword);
   await page.getByRole("checkbox", { name: /can.t be undone/ }).check({ force: true });
   await page.getByRole("button", { name: "Delete my account" }).click();
   await expect(page.getByText(/Check your email/)).toBeVisible();
   await page.goto(await emailedLink(request, email, "/delete-user/callback"));
-  await page.goto("/login");
+  await openForm(page, "/login");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(newPassword);
   await page.getByRole("button", { name: "Log in" }).click();

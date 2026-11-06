@@ -12,7 +12,14 @@
  */
 :root {
   color-scheme: light;
-  --radius: 0.625rem;
+  /* Corners by size: checkboxes and tags 4, inputs and buttons 10, cards and dialogs 16. HeroUI reads these tokens. */
+  --radius: 0.375rem;
+  --field-radius: 10px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 16px;
+  --radius-3xl: 16px;
   --field-border-width: 1px;
 
   --background: #f6f5f0;
@@ -106,6 +113,25 @@
   --color-highlight-ink: var(--highlight-ink);
   --color-highlight-soft: var(--highlight-soft);
   --color-brand: var(--brand);
+}
+
+/* HeroUI's buttons are pills; every control here shares the inputs' corner */
+.button {
+  border-radius: var(--radius-xl);
+}
+
+/* HeroUI's off track nearly vanishes on a dark card */
+.switch {
+  --switch-control-bg: var(--field-border);
+}
+
+/* A form opening in Settings: a quick fade and small rise, no layout animation */
+.settings-reveal {
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1), transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 .button--primary {

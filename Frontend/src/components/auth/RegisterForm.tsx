@@ -50,7 +50,7 @@ function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
           </>
         )}
 
-        <Form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <Form method="post" className="flex flex-col gap-5" onSubmit={handleSubmit}>
           <TextField name="name" value={name} onChange={setName} validate={validateName} isRequired isDisabled={isLoading} autoComplete="name" maxLength={100} fullWidth>
             <Label>Name</Label>
             <Input />

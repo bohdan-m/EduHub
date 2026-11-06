@@ -57,7 +57,7 @@ function TwoFactorForm() {
       footer={<>Lost access? <Link className="font-medium text-link" href="/login">Start over</Link></>}
       error={error}
     >
-      <Form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+      <Form method="post" className="flex flex-col gap-5" onSubmit={handleSubmit}>
         <TextField
           key={useBackup ? "backup" : "totp"}
           name="code"

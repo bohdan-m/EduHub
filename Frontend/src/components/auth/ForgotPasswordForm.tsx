@@ -50,7 +50,7 @@ function ForgotPasswordForm() {
       footer={<>Remembered it? <Link className="font-medium text-link" href="/login">Log in</Link></>}
       error={error}
     >
-      <Form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+      <Form method="post" className="flex flex-col gap-5" onSubmit={handleSubmit}>
         <TextField name="email" type="email" value={email} onChange={setEmail} validate={validateEmail} isRequired isDisabled={isLoading} autoComplete="email" autoFocus fullWidth>
           <Label>Email</Label>
           <Input />

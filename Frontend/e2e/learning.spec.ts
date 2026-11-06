@@ -80,7 +80,7 @@ test("a learner finishes a course and its author sees how it went", async ({ pag
   await learner.getByLabel("What did you think? (optional)").fill("Short and clear.");
   await learner.getByRole("button", { name: "Post review" }).click();
   await expect(learner.getByRole("button", { name: "Update review" })).toBeVisible();
-  await expect(learner.getByText("Short and clear.")).toBeVisible();
+  await expect(learner.getByRole("listitem").getByText("Short and clear.")).toBeVisible();
 
   await learner.getByRole("link", { name: "View certificate" }).click();
   await expect(learner.getByRole("heading", { name: "E2E Learner" })).toBeVisible();

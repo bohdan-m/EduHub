@@ -48,7 +48,7 @@ function HeaderPage() {
                 <IconPlus size={16} aria-hidden />
                 Create course
             </Link>
-            <Link className={buttonVariants({ variant: "ghost", size: "sm", fullWidth })} href="/settings" onClick={closeMenu} aria-current={pathname === "/settings" ? "page" : undefined}>
+            <Link className={buttonVariants({ variant: pathname === "/settings" ? "secondary" : "ghost", size: "sm", fullWidth })} href="/settings" onClick={closeMenu} aria-current={pathname === "/settings" ? "page" : undefined}>
                 <IconSettings size={16} aria-hidden />
                 Settings
             </Link>

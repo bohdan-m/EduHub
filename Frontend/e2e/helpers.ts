@@ -39,8 +39,17 @@ export async function emailedLink(request: APIRequestContext, email: string, con
   return link!;
 }
 
+/** Opens a page and waits until its form is live: typed into too early, a submit goes to the server, not the app. */
+export async function openForm(page: Page, path: string) {
+  await page.goto(path);
+  await page.waitForFunction(() => {
+    const submit = document.querySelector('form button[type="submit"]');
+    return submit !== null && Object.keys(submit).some((key) => key.startsWith("__reactFiber"));
+  });
+}
+
 export async function logIn(page: Page, email: string, password = PASSWORD) {
-  await page.goto("/login");
+  await openForm(page, "/login");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
@@ -50,7 +59,7 @@ export async function logIn(page: Page, email: string, password = PASSWORD) {
 /** Signs up through the form and confirms the address the way a person would, ending signed in on /home. */
 export async function signUp(page: Page, request: APIRequestContext, name: string) {
   const email = uniqueEmail("ui");
-  await page.goto("/register");
+  await openForm(page, "/register");
   await page.getByLabel("Name").fill(name);
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(PASSWORD);

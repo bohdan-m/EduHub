@@ -54,7 +54,7 @@ function ResetPasswordForm({ token }: { token: string | null }) {
       error={error}
     >
       {token && (
-        <Form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <Form method="post" className="flex flex-col gap-5" onSubmit={handleSubmit}>
           <TextField
             name="password"
             type="password"

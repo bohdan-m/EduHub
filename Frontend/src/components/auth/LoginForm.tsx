@@ -59,7 +59,7 @@ function LoginForm({ googleEnabled, linkError }: { googleEnabled: boolean; linkE
           </>
         )}
 
-        <Form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <Form method="post" className="flex flex-col gap-5" onSubmit={handleSubmit}>
           <TextField name="email" type="email" value={email} onChange={setEmail} validate={validateEmail} isRequired isDisabled={isLoading} autoComplete="email" fullWidth>
             <Label>Email</Label>
             <Input />
